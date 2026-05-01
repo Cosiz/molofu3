@@ -36,7 +36,6 @@ export function SettingsScreen() {
     <div style={{ padding: spacing.md, paddingBottom: 80 }}>
       <h1 style={{ ...typography.heading, marginBottom: spacing.md }}>Settings</h1>
 
-      {/* Profile */}
       <div style={{
         background: colors.card,
         borderRadius: borderRadius.md,
@@ -67,7 +66,6 @@ export function SettingsScreen() {
         </div>
       </div>
 
-      {/* Notifications */}
       <div style={{
         background: colors.card,
         borderRadius: borderRadius.md,
@@ -96,7 +94,6 @@ export function SettingsScreen() {
         ))}
       </div>
 
-      {/* SLA Settings */}
       <div style={{
         background: colors.card,
         borderRadius: borderRadius.md,
@@ -131,7 +128,6 @@ export function SettingsScreen() {
         ))}
       </div>
 
-      {/* Onboarding Info */}
       {onboarding && (
         <div style={{
           background: colors.card,
@@ -150,7 +146,6 @@ export function SettingsScreen() {
         </div>
       )}
 
-      {/* Logout */}
       <button
         onClick={() => { logout(); navigate('/auth'); }}
         style={{
@@ -168,7 +163,7 @@ export function SettingsScreen() {
       >Logout</button>
 
       <div style={{ textAlign: 'center', marginTop: spacing.lg, ...typography.small, color: colors.textSecondary }}>
-        Molofu3 v3.7.0 — Family Command Centre
+        Molofu3 v3.7.2 — Family Command Centre
       </div>
     </div>
   );

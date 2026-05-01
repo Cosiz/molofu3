@@ -17,15 +17,6 @@ export function TaskDetail() {
     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   );
 
-  useEffect(() => {
-    // Mark messages as read
-    taskMessages.forEach(m => {
-      if (m.from_user_id !== currentUser?.id && !m.read) {
-        // Would call markRead in a real implementation
-      }
-    });
-  }, [taskMessages]);
-
   if (!task) {
     return (
       <div style={{ padding: spacing.xl, textAlign: 'center' }}>
@@ -76,13 +67,6 @@ export function TaskDetail() {
     setNewMessage('');
   };
 
-  const steps = task.task_type === 'pickup' || task.task_type === 'dropoff'
-    ? ['pending', 'accepted', 'in_progress', 'arrived', 'done']
-    : ['pending', 'accepted', 'in_progress', 'done'];
-
-  const currentStepIndex = steps.indexOf(task.status);
-  const nextStep = steps[currentStepIndex + 1];
-
   return (
     <div style={{ padding: spacing.md, paddingBottom: 80 }}>
       {/* Header */}
@@ -131,7 +115,7 @@ export function TaskDetail() {
           {task.location && (
             <>
               <span>•</span>
-              <span> {task.location}</span>
+              <span>📍 {task.location}</span>
             </>
           )}
         </div>
@@ -149,7 +133,7 @@ export function TaskDetail() {
       </div>
 
       {/* Action Buttons (Helper only) */}
-      {isHelper && nextStep && task.status !== 'done' && (
+      {isHelper && task.status !== 'done' && (
         <div style={{ marginBottom: spacing.md }}>
           <button
             onClick={() => handleStatusAction(

@@ -19,11 +19,10 @@ const taskTypes: { value: TaskType; label: string; defaultPriority: Priority; de
 
 export function CreateTaskForm({ onClose }: CreateTaskFormProps) {
   const { currentUser, tasks, addTask } = useStore();
-  const helpers = tasks.length > 0 ? [...new Set(tasks.map(t => t.assigned_to))] : ['user-2'];
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [assignee, setAssignee] = useState(helpers[0] || '');
+  const [assignee, setAssignee] = useState('user-2');
   const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 16));
   const [priority, setPriority] = useState<Priority>('medium');
   const [taskType, setTaskType] = useState<TaskType>('pickup');

@@ -3,13 +3,12 @@ import { colors, typography, spacing, borderRadius, shadow } from '../theme';
 import { timeAgo, isToday } from '../utils/time';
 
 export function ObserverDashboard() {
-  const { currentUser, tasks, messages } = useStore();
+  const { currentUser, tasks } = useStore();
 
   const todayTasks = tasks.filter(t => isToday(t.due_date));
   const completedTasks = tasks.filter(t => t.status === 'done').sort((a, b) =>
     new Date(b.completed_at || '').getTime() - new Date(a.completed_at || '').getTime()
   );
-  const pendingTasks = tasks.filter(t => t.status !== 'done');
   const helperTasks = tasks.filter(t => t.assigned_to !== currentUser?.id);
 
   return (
@@ -54,7 +53,7 @@ export function ObserverDashboard() {
         marginBottom: spacing.md,
         boxShadow: shadow.card,
       }}>
-        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}> Helper Status</h3>
+        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>📍 Helper Status</h3>
         {helperTasks.length === 0 ? (
           <div style={{ ...typography.small, color: colors.textSecondary }}>No active tasks for helper</div>
         ) : (
@@ -118,7 +117,7 @@ export function ObserverDashboard() {
               ...typography.small,
               color: colors.secondary,
               fontWeight: 600,
-            }}>✓ Done</span>
+            }}>✅ Done</span>
           </div>
         ))
       )}

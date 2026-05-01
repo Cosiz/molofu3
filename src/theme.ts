@@ -27,12 +27,13 @@ export const typography = {
   body: { fontSize: 14, fontWeight: 400 },
   small: { fontSize: 12, fontWeight: 400 },
   button: { fontSize: 16, fontWeight: 700, textTransform: 'uppercase' as const },
+  helperLabel: { fontSize: 18, fontWeight: 700 },
 };
 
 export const statusColors: Record<string, string> = {
   pending: colors.warning,
   accepted: colors.primary,
-  in_progress: colors.primary,
+  in_progress: colors.primaryLight,
   arrived: colors.secondary,
   done: colors.secondary,
 };
@@ -73,4 +74,9 @@ export const borderRadius = {
 export const shadow = {
   card: `0 2px 8px ${colors.shadow}`,
   elevated: `0 4px 16px ${colors.shadow}`,
+};
+
+export const touchTarget = {
+  min: 44,
+  large: 56,
 };

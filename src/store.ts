@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { User, Task, Message, Escalation, Settings, OnboardingData, UserRole } from './types';
+import type { User, Task, Message, Escalation, Settings, OnboardingData } from './types';
 
 interface AuthSlice {
   currentUser: User | null;

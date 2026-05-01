@@ -1,6 +1,6 @@
 import { useStore } from '../store';
 import { TaskCard } from '../components/TaskCard';
-import { colors, typography, spacing, borderRadius, shadow } from '../theme';
+import { colors, typography, spacing, borderRadius, shadow, touchTarget } from '../theme';
 
 export function HelperDashboard() {
   const { currentUser, tasks, updateTask } = useStore();
@@ -57,7 +57,7 @@ export function HelperDashboard() {
             Due: {new Date(nextTask.due_date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}
           </div>
           {nextTask.location && (
-            <div style={{ ...typography.small, color: colors.primary, marginBottom: spacing.md }}> {nextTask.location}</div>
+            <div style={{ ...typography.small, color: colors.primary, marginBottom: spacing.md }}>📍 {nextTask.location}</div>
           )}
           <button
             onClick={() => handleAction(nextTask.id, nextTask.status === 'pending' ? 'accept' : nextTask.status === 'accepted' ? 'start' : 'done')}
@@ -69,7 +69,7 @@ export function HelperDashboard() {
               color: colors.card,
               border: 'none',
               ...typography.button,
-              minHeight: 56,
+              minHeight: touchTarget.large,
               fontSize: 20,
               cursor: 'pointer',
             }}

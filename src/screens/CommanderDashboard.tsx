@@ -7,12 +7,11 @@ import { colors, typography, spacing, borderRadius, shadow } from '../theme';
 import { isToday } from '../utils/time';
 
 export function CommanderDashboard() {
-  const { currentUser, tasks, escalations, isOnboardingComplete } = useStore();
+  const { currentUser, tasks, escalations } = useStore();
   const [showCreateForm, setShowCreateForm] = useState(false);
 
   const todayTasks = tasks.filter(t => isToday(t.due_date));
   const activeEscalations = escalations.filter(e => !e.resolved);
-  const pendingCount = todayTasks.filter(t => t.status === 'pending').length;
   const inProgressCount = todayTasks.filter(t => t.status === 'in_progress' || t.status === 'accepted').length;
   const doneCount = todayTasks.filter(t => t.status === 'done').length;
 
@@ -114,7 +113,7 @@ export function CommanderDashboard() {
           ...typography.small,
         }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: spacing.sm }}>️</div>
+            <div style={{ fontSize: 32, marginBottom: spacing.sm }}>🗺️</div>
             <div>Maria is currently {inProgressCount > 0 ? 'on a task' : 'available'}</div>
             {inProgressCount > 0 && <div style={{ color: colors.primary, marginTop: 4 }}>● Live tracking active</div>}
           </div>

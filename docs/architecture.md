@@ -1,8 +1,8 @@
-# Molofu3 Architecture v3.7
+# Molofu3 v3.7.2 Architecture
 
 ## Tech Stack
-- **Frontend:** React 19 + Vite + TypeScript
-- **Routing:** React Router v7 (BrowserRouter + ProtectedRoute)
+- **Frontend:** React 18 + Vite + TypeScript (stable, proven)
+- **Routing:** React Router v6 (stable, no v7 breaking changes)
 - **State Management:** Zustand with localStorage persistence
 - **Styling:** CSS-in-JS (inline style objects, no external UI library)
 - **Build:** Vite v8 (rolldown)
@@ -15,10 +15,10 @@
 ```
 src/
 ├── main.tsx                    # Entry point
-── App.tsx                     # Router + layout shell + ProtectedRoute
+├── App.tsx                     # Router + layout shell + ProtectedRoute
 ├── theme.ts                    # Design tokens (colors, spacing, typography)
 ├── types.ts                    # TypeScript interfaces
-├── store.ts                    # Zustand store (auth, tasks, messages, escalations, settings)
+├── store.ts                    # Zustand store (auth, tasks, messages, escalations, settings, onboarding)
 ├── services/
 │   ├── notification.ts         # Auto-reminder + browser notifications
 │   └── escalation.ts           # SLA polling, overdue detection
@@ -107,19 +107,19 @@ interface Escalation {
 ## State Management (Zustand)
 Single store with slices:
 - **auth:** currentUser, login, logout, role
-- **tasks:** tasks, addTask, updateTask, deleteTask, getTasksByAssignee
-- **messages:** messages, addMessage, markRead
-- **escalations:** escalations, triggerEscalation, resolveEscalation
+- **tasks:** tasks, addTask, updateTask, deleteTask, getTasksByAssignee, getTodayTasks
+- **messages:** messages, addMessage, markRead, getMessagesByTask
+- **escalations:** escalations, addEscalation, resolveEscalation, getActiveEscalations
 - **settings:** notificationPrefs, escalationThresholds
 - **onboarding:** isComplete, step, saveStep
 
 All slices persist to localStorage automatically.
 
-## Routing & Access Control
+## Routing & Access Control (React Router v6)
 - `/` → Redirect to `/auth` if not logged in, else role-based dashboard
 - `/auth` → AuthScreen (public)
 - `/onboarding` → Onboarding (after first login)
-- `/dashboard` → CommanderDashboard (commander only)
+- `/dashboard` → Role-based dashboard (Commander/Helper/Observer)
 - `/tasks` → TaskList → TaskDetail (all roles, filtered by role)
 - `/messages` → MessageFeed (all roles)
 - `/schedule` → ScheduleView (commander only)

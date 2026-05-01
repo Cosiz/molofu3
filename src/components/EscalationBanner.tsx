@@ -32,7 +32,7 @@ export function EscalationBanner({ escalations, tasks }: EscalationBannerProps) 
     }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
-        <span style={{ fontSize: 18 }}>️</span>
+        <span style={{ fontSize: 18 }}>⚠️</span>
         <div style={{ flex: 1 }}>
           <div style={{ ...typography.subheading, color: colors.card }}>
             {critical.length > 0 ? `${critical.length} Critical Alert${critical.length > 1 ? 's' : ''}` : `${warning.length} Warning${warning.length > 1 ? 's' : ''}`}

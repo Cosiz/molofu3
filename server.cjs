@@ -21,14 +21,11 @@ const mimeTypes = {
 };
 
 const server = http.createServer((req, res) => {
-  // Parse URL
   let urlPath = req.url.split('?')[0];
   if (urlPath === '/') urlPath = '/index.html';
 
-  // Build file path
   let filePath = path.join(DIST_DIR, urlPath);
 
-  // Check if file exists
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     const ext = path.extname(filePath).toLowerCase();
     const contentType = mimeTypes[ext] || 'application/octet-stream';
@@ -43,7 +40,6 @@ const server = http.createServer((req, res) => {
       res.end(data);
     });
   } else {
-    // SPA fallback — serve index.html for all non-asset routes
     const indexPath = path.join(DIST_DIR, 'index.html');
     if (fs.existsSync(indexPath)) {
       fs.readFile(indexPath, (err, data) => {

@@ -1,34 +1,35 @@
-# Molofu3 Verification Criteria v3.7
+# Molofu3 v3.7.2 Verification Criteria
 
-## Scenario Matrix
+## Scenario Matrix (Empathy-Driven)
 
 ### Feature: Create Task
-| # | Persona | Context | Constraint | What Could Go Wrong | Success Criteria |
-|---|---------|---------|------------|---------------------|------------------|
-| 1 | Sarah | Office meeting | 30 seconds, one hand, can't type | Form too complex → abandons | Creates task in ≤30s, ≤4 taps |
-| 2 | Sarah | Walking to car | Distracted, bright sunlight, shaking phone | Can't read small text | Large buttons, high contrast, finds + immediately |
-| 3 | Maria | At market | Poor internet, noisy, carrying bags | App won't load | Works offline, tasks cached |
-| 4 | Sarah | Late night on couch | Tired, dark room, one hand | Too many steps → falls asleep | ≤3 steps, auto-saves draft |
-| 5 | David | Hotel in Singapore | Laptop browser, different timezone | Sees wrong info | Read-only summary visible in one glance |
+| # | Persona | Context | Constraint | Emotional State | What Could Go Wrong | Success Criteria |
+|---|---------|---------|------------|-----------------|---------------------|------------------|
+| 1 | Sarah | In office meeting | 30 seconds, one hand, can't type | Rushed, stressed | Form too complex → abandons, calls WhatsApp | Creates task in ≤20s, ≤3 taps |
+| 2 | Sarah | Walking to MTR | Distracted, bright sunlight, shaking phone | Frustrated by noise | Can't read small text, misses + button | Large buttons, high contrast, finds + immediately |
+| 3 | Sarah | Late night on couch | Tired, dark room, one hand | Relaxed but sleepy | Too many steps → falls asleep, forgets | ≤3 steps, auto-saves draft if interrupted |
+| 4 | Maria | At market | Poor internet, noisy, carrying bags | Overwhelmed | App won't load, can't see task list | Works offline, tasks cached, simple icons |
+| 5 | Maria | Cooking with wet hands | One hand, can't type, steamy kitchen | Stressed, time pressure | Can't tap small buttons, keyboard won't open | Big buttons (44px+), no typing required |
+| 6 | David | Hotel in Singapore | Laptop browser, different timezone, traveling | Anxious about family | Sees wrong info, can't find status | Read-only summary visible in one glance |
 
 ### Feature: View/Update Tasks
 | # | Persona | Context | Constraint | What Could Go Wrong | Success Criteria |
 |---|---------|---------|------------|---------------------|------------------|
 | 1 | Maria | Morning routine | Simple English needed, big fingers | Can't understand labels | Icons clear, labels simple, big buttons |
-| 2 | Sarah | Dashboard glance | 5 seconds to check status | Too much info → can't find status | Status visible at a glance |
-| 3 | David | Read-only check | Can't take action, just observe | No view of current status | Timeline shows completed tasks |
+| 2 | Sarah | Dashboard glance | 5 seconds to check status | Too much info → can't find status | Status visible at a glance, color-coded |
+| 3 | David | Read-only check | Can't take action, just observe | No view of current status | Timeline shows completed tasks clearly |
 
 ### Feature: Messaging
 | # | Persona | Context | Constraint | What Could Go Wrong | Success Criteria |
 |---|---------|---------|------------|---------------------|------------------|
-| 1 | Sarah | In meeting | Can't type long messages | Can't communicate with helper | Quick-reply templates, voice option |
-| 2 | Maria | With wet hands | One hand, can't type | Can't respond to Commander | Big buttons, no typing required |
+| 1 | Sarah | In meeting | Can't type long messages | Can't communicate with helper | Quick-reply templates, ≤2 taps to send |
+| 2 | Maria | With wet hands | One hand, can't type | Can't respond to Commander | Big send button, no keyboard required |
 
 ### Feature: Escalation
 | # | Persona | Context | Constraint | What Could Go Wrong | Success Criteria |
 |---|---------|---------|------------|---------------------|------------------|
 | 1 | Sarah | During presentation | Must not be interrupted except critical | Too many notifications → dismisses all | Only critical alerts during meetings |
-| 2 | Sarah | Commuting home | Needs to know if kids are safe | No visibility → panic | Real-time status update |
+| 2 | Sarah | Commuting home | Needs to know if kids are safe | No visibility → panic | Real-time status update visible |
 
 ### Feature: Onboarding
 | # | Persona | Context | Constraint | What Could Go Wrong | Success Criteria |
@@ -46,15 +47,15 @@
   persona: Sarah Chen (Commander)
   verification_type: dynamic
   assertion: User taps floating + button → form appears → fills title → taps submit → task appears in list
-  success_threshold: ≤4 taps from dashboard to task created
+  success_threshold: ≤3 taps from dashboard to task created, ≤20 seconds total
   failure_mode: Form has too many fields → Sarah abandons and calls WhatsApp
 
 - id: S-CT-02
-  scenario: "S2: Sarah walking to car — distracted, bright sunlight"
+  scenario: "S2: Sarah walking to MTR — distracted, bright sunlight"
   persona: Sarah Chen (Commander)
   verification_type: dynamic
-  assertion: + button visible and large (44px+) in bright conditions, high contrast
-  success_threshold: + button immediately visible on dashboard
+  assertion: + button visible and large (56px+) in bright conditions, high contrast
+  success_threshold: + button immediately visible on dashboard, readable in bright light
   failure_mode: Small + button → Sarah can't find it while walking
 
 - id: S-CT-03
@@ -70,7 +71,7 @@
   scenario: "S1: Maria morning routine — simple English, big fingers"
   persona: Maria Santos (Helper)
   verification_type: dynamic
-  assertion: Helper sees assigned task with large Accept/Start/Done buttons (44px+)
+  assertion: Helper sees assigned task with large Accept/Start/Done buttons (44px+), icon labels
   success_threshold: Buttons ≥44px height, labels use simple words + icons
   failure_mode: Small buttons or complex labels → Maria can't tap or understand
 
@@ -79,15 +80,15 @@
   persona: Sarah Chen (Commander)
   verification_type: dynamic
   assertion: Dashboard shows task count, status summary, escalation banner if any
-  success_threshold: All critical info visible without scrolling
+  success_threshold: All critical info visible without scrolling, color-coded status
   failure_mode: Too much info → can't find what matters
 
 - id: S-VT-03
   scenario: "S3: David read-only check"
   persona: David Chen (Observer)
   verification_type: dynamic
-  assertion: Observer sees timeline of completed tasks, no action buttons
-  success_threshold: Timeline visible, no edit/create options
+  assertion: Observer sees timeline of completed tasks, no action buttons, clear status indicators
+  success_threshold: Timeline visible, no edit/create options, green checkmarks for done
   failure_mode: David sees Commander UI → confused by action buttons
 
 #### Messaging Scenarios
@@ -146,8 +147,8 @@
 #### Core Infrastructure
 - id: ST-001
   verification_type: static
-  assertion: React 19 + Vite + TypeScript project structure exists
-  threshold: package.json has react ^19, vite, typescript dependencies
+  assertion: React 18 + Vite + TypeScript project structure exists
+  threshold: package.json has react ^18, vite, typescript dependencies
 
 - id: ST-002
   verification_type: static
@@ -156,8 +157,8 @@
 
 - id: ST-003
   verification_type: static
-  assertion: React Router v7 with BrowserRouter
-  threshold: Router imports from react-router-dom v7
+  assertion: React Router v6 with BrowserRouter
+  threshold: Router imports from react-router-dom v6
 
 - id: ST-004
   verification_type: static

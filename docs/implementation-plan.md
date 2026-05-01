@@ -1,10 +1,10 @@
-# Molofu3 Implementation Plan v3.7
+# Molofu3 v3.7.2 Implementation Plan
 
 ## Task Breakdown (Bite-Sized, 2-5 min each)
 
 ### T1: Project Setup — package.json, vite.config.ts, tsconfig.json, index.html
 **Files:** package.json, vite.config.ts, tsconfig.json, index.html
-**Details:** React 19, Vite, TypeScript, react-router-dom v7, zustand. Vite config with build output to dist/. TS config for strict mode, React JSX. Index.html with app root div.
+**Details:** React 18 (stable), Vite, TypeScript, react-router-dom v6 (stable), zustand. Vite config with build output to dist/. TS config for strict mode, React JSX. Index.html with app root div.
 
 ### T2: Types — TypeScript interfaces for User, Task, Message, Escalation
 **Files:** src/types.ts
@@ -12,11 +12,11 @@
 
 ### T3: Theme — Design tokens (colors, spacing, typography)
 **Files:** src/theme.ts
-**Details:** Color palette (primary blue #1E40AF, green #10B981, red #EF4444, amber #F59E0B). Spacing tokens (xs=4, sm=8, md=16, lg=24, xl=32). Typography scale. Status color map.
+**Details:** Color palette (primary blue #1E40AF, green #10B981, red #EF4444, amber #F59E0B). Spacing tokens (xs=4, sm=8, md=16, lg=24, xl=32). Typography scale. Status color map. Touch target 44px minimum.
 
-### T4: Store — Zustand store with auth, tasks, messages, escalations, settings slices
+### T4: Store — Zustand store with auth, tasks, messages, escalations, settings, onboarding slices
 **Files:** src/store.ts
-**Details:** Single create call with multiple slices. localStorage persistence via persist middleware or manual sync. Auth slice: currentUser, login, logout. Tasks slice: tasks array, CRUD operations. Messages slice: messages array, addMessage. Escalations slice: escalations array, trigger/resolve. Settings slice: notification prefs.
+**Details:** Single create call with multiple slices. localStorage persistence via manual sync. Auth slice: currentUser, login, logout. Tasks slice: tasks array, CRUD operations. Messages slice: messages array, addMessage. Escalations slice: escalations array, trigger/resolve. Settings slice: notification prefs. Onboarding slice: completion state.
 
 ### T5: Mock Data — Multi-day sample data with dynamic dates
 **Files:** src/mocks/data.ts
@@ -44,11 +44,11 @@
 
 ### T11: Components — TaskCard (reusable with status colors)
 **Files:** src/components/TaskCard.tsx
-**Details:** Props: task, onPress. Shows title, status badge (color-coded), assignee, due time. Border radius 12px, shadow. Status colors: pending=amber, accepted=blue, in_progress=blue, arrived=green, done=green.
+**Details:** Props: task, onPress. Shows title, status badge (color-coded), assignee, due time. Border radius 12px, shadow. Left border 4px color-coded by status. Status colors: pending=amber, accepted=blue, in_progress=blue, arrived=green, done=green.
 
 ### T12: Components — MessageBubble (sent/received styling)
 **Files:** src/components/MessageBubble.tsx
-**Details:** Props: message, isSent. Sent: primary color bg, white text, right-aligned. Received: white bg, dark text, left-aligned. Border radius 16px. Timestamp below.
+**Details:** Props: message, isSent. Sent: primary color bg, white text, right-aligned. Received: white bg, dark text, left-aligned. Border radius 16px. Timestamp below. Read receipts (✓✓).
 
 ### T13: Components — EscalationBanner (red alert)
 **Files:** src/components/EscalationBanner.tsx
@@ -76,7 +76,7 @@
 
 ### T19: Screens — HelperDashboard (simplified, big buttons)
 **Files:** src/screens/HelperDashboard.tsx
-**Details:** Greeting. Next task big card (44px+ buttons: Accept/Start/Done). Assigned tasks list (TaskCards). No calendar, no settings, no GPS. Bottom nav: My Tasks, Messages.
+**Details:** Greeting. Next task big card (56px+ buttons: Accept/Start/Done). Assigned tasks list (TaskCards). No calendar, no settings, no GPS. Bottom nav: My Tasks, Messages.
 
 ### T20: Screens — ObserverDashboard (read-only)
 **Files:** src/screens/ObserverDashboard.tsx
@@ -100,7 +100,7 @@
 
 ### T25: App — Router + layout shell + ProtectedRoute integration
 **Files:** src/App.tsx
-**Details:** BrowserRouter wrapper. Routes for all 9 screens. ProtectedRoute guards. Layout shell with NavBar (role-based). Auth check redirects.
+**Details:** BrowserRouter wrapper (React Router v6). Routes for all 9 screens. ProtectedRoute guards. Layout shell with NavBar (role-based). Auth check redirects.
 
 ### T26: Main — Entry point with store initialization
 **Files:** src/main.tsx
@@ -112,7 +112,7 @@
 
 ### T28: Build Verification — vite build, bundle check
 **Files:** (none — verification step)
-**Details:** Run npx vite build. Check dist/ has index.html + assets/. Bundle > 200KB. All routes accessible.
+**Details:** Run npx vite build. Check dist/ has index.html + assets/. Bundle > 200KB. All routes accessible. Runtime syntax validation.
 
 ## Execution Order
 1. T1 (setup) → T2 (types) → T3 (theme) — infrastructure first

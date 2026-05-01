@@ -7,14 +7,12 @@ export function MessageFeed() {
   const { currentUser, tasks, messages } = useStore();
   const navigate = useNavigate();
 
-  // Group messages by task
   const taskMessages: Record<string, typeof messages> = {};
   messages.forEach(msg => {
     if (!taskMessages[msg.task_id]) taskMessages[msg.task_id] = [];
     taskMessages[msg.task_id].push(msg);
   });
 
-  // Get conversation previews
   const conversations = Object.entries(taskMessages).map(([taskId, msgs]) => {
     const task = tasks.find(t => t.id === taskId);
     const sorted = [...msgs].sort((a, b) =>

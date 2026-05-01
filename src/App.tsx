@@ -34,69 +34,14 @@ function AppContent() {
   return (
     <div style={{ minHeight: '100vh', background: colors.background }}>
       <Routes>
-        {/* Public routes */}
         <Route path="/auth" element={<AuthScreen />} />
-
-        {/* Authenticated routes */}
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <Onboarding />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Role-based dashboard */}
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              {dashboardForRole()}
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Shared routes */}
-        <Route
-          path="/tasks"
-          element={
-            <ProtectedRoute allowedRoles={['commander', 'helper']}>
-              <TaskListView />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/tasks/:id" element={
-          <ProtectedRoute>
-            <TaskDetail />
-          </ProtectedRoute>
-        } />
-        <Route
-          path="/messages"
-          element={
-            <ProtectedRoute>
-              <MessageFeed />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/schedule"
-          element={
-            <ProtectedRoute allowedRoles={['commander']}>
-              <ScheduleView />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute allowedRoles={['commander', 'helper']}>
-              <SettingsScreen />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirects */}
+        <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute>{dashboardForRole()}</ProtectedRoute>} />
+        <Route path="/tasks" element={<ProtectedRoute allowedRoles={['commander', 'helper']}><TaskListView /></ProtectedRoute>} />
+        <Route path="/tasks/:id" element={<ProtectedRoute><TaskDetail /></ProtectedRoute>} />
+        <Route path="/messages" element={<ProtectedRoute><MessageFeed /></ProtectedRoute>} />
+        <Route path="/schedule" element={<ProtectedRoute allowedRoles={['commander']}><ScheduleView /></ProtectedRoute>} />
+        <Route path="/settings" element={<ProtectedRoute allowedRoles={['commander', 'helper']}><SettingsScreen /></ProtectedRoute>} />
         <Route path="/" element={
           isAuthenticated
             ? (isOnboardingComplete ? <Navigate to="/dashboard" /> : <Navigate to="/onboarding" />)
@@ -157,8 +102,7 @@ function TaskListView() {
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             borderLeft: `4px solid ${
               task.status === 'done' ? '#10B981' :
-              task.status === 'in_progress' ? '#3B82F6' :
-              task.status === 'accepted' ? '#3B82F6' :
+              task.status === 'in_progress' || task.status === 'accepted' ? '#3B82F6' :
               '#F59E0B'
             }`,
             cursor: 'pointer',

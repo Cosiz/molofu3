@@ -1,22 +1,22 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { colors, typography, spacing, shadow } from '../theme';
+import { colors, typography, spacing, shadow, touchTarget } from '../theme';
 
-const navItems: Record<string, { icon: string; label: string; path: string; roles: string[] }[]> = {
+const navItems: Record<string, { icon: string; label: string; path: string }[]> = {
   commander: [
-    { icon: '📊', label: 'Dashboard', path: '/dashboard', roles: ['commander'] },
-    { icon: '', label: 'Tasks', path: '/tasks', roles: ['commander', 'helper'] },
-    { icon: '💬', label: 'Messages', path: '/messages', roles: ['commander', 'helper', 'observer'] },
-    { icon: '📅', label: 'Schedule', path: '/schedule', roles: ['commander'] },
-    { icon: '⚙️', label: 'Settings', path: '/settings', roles: ['commander', 'helper'] },
+    { icon: '📊', label: 'Dashboard', path: '/dashboard' },
+    { icon: '📋', label: 'Tasks', path: '/tasks' },
+    { icon: '💬', label: 'Messages', path: '/messages' },
+    { icon: '📅', label: 'Schedule', path: '/schedule' },
+    { icon: '⚙️', label: 'Settings', path: '/settings' },
   ],
   helper: [
-    { icon: '📋', label: 'My Tasks', path: '/tasks', roles: ['helper'] },
-    { icon: '💬', label: 'Messages', path: '/messages', roles: ['helper'] },
+    { icon: '📋', label: 'My Tasks', path: '/tasks' },
+    { icon: '💬', label: 'Messages', path: '/messages' },
   ],
   observer: [
-    { icon: '️', label: 'Status', path: '/dashboard', roles: ['observer'] },
-    { icon: '📜', label: 'Feed', path: '/messages', roles: ['observer'] },
+    { icon: '📍', label: 'Status', path: '/dashboard' },
+    { icon: '📜', label: 'Feed', path: '/messages' },
   ],
 };
 
@@ -35,7 +35,7 @@ export function NavBar() {
       bottom: 0,
       left: 0,
       right: 0,
-      height: 64,
+      height: touchTarget.min + 16,
       background: colors.card,
       borderTop: `1px solid ${colors.border}`,
       display: 'flex',
@@ -61,6 +61,7 @@ export function NavBar() {
               background: 'transparent',
               cursor: 'pointer',
               opacity: isActive ? 1 : 0.6,
+              minHeight: touchTarget.min,
             }}
           >
             <span style={{ fontSize: 20 }}>{item.icon}</span>

@@ -40,19 +40,15 @@ export function AuthScreen() {
     }
 
     // Demo login — accept any email/password for demo
-    if (isSignup || true) {
-      const newUser = {
-        id: `user-${Date.now()}`,
-        name: email.split('@')[0],
-        role,
-        email,
-        avatar: email.slice(0, 2).toUpperCase(),
-      };
-      login(newUser);
-      navigate('/onboarding');
-    } else {
-      setError('Invalid credentials. Try signing up.');
-    }
+    const newUser = {
+      id: `user-${Date.now()}`,
+      name: email.split('@')[0],
+      role,
+      email,
+      avatar: email.slice(0, 2).toUpperCase(),
+    };
+    login(newUser);
+    navigate('/onboarding');
   };
 
   return (
@@ -75,7 +71,7 @@ export function AuthScreen() {
         justifyContent: 'center',
         fontSize: 36,
         marginBottom: spacing.lg,
-      }}>👨‍👩‍👧‍👦</div>
+      }}>👨‍‍👧👦</div>
 
       <h1 style={{ ...typography.heading, marginBottom: spacing.xs }}>Family Command Centre</h1>
       <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>Molofu3</p>

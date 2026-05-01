@@ -5,7 +5,6 @@ import { useStore } from './store';
 import { mockUsers, mockTasks, mockMessages, mockEscalations } from './mocks/data';
 import { requestNotificationPermission } from './services/notification';
 
-// Initialize store with mock data if empty
 const store = useStore.getState();
 if (store.tasks.length === 0) {
   mockTasks.forEach(task => store.addTask(task));
@@ -13,7 +12,6 @@ if (store.tasks.length === 0) {
   mockEscalations.forEach(esc => store.addEscalation(esc));
 }
 
-// Request notification permission on first use
 requestNotificationPermission();
 
 createRoot(document.getElementById('root')!).render(

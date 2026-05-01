@@ -5,7 +5,6 @@ import { getDayName, getDayNumber, isToday } from '../utils/time';
 export function ScheduleView() {
   const { tasks } = useStore();
 
-  // Get this week's dates
   const today = new Date();
   const dayOfWeek = today.getDay();
   const monday = new Date(today);
@@ -17,7 +16,6 @@ export function ScheduleView() {
     return date.toISOString().split('T')[0];
   });
 
-  // Group tasks by date
   const tasksByDate: Record<string, typeof tasks> = {};
   tasks.forEach(task => {
     const date = task.due_date.split('T')[0];
@@ -29,15 +27,13 @@ export function ScheduleView() {
     <div style={{ padding: spacing.md, paddingBottom: 80 }}>
       <h1 style={{ ...typography.heading, marginBottom: spacing.md }}>Weekly Schedule</h1>
 
-      {/* Week Header */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(7, 1fr)',
         gap: 2,
         marginBottom: spacing.sm,
       }}>
-        {weekDays.map((date, i) => {
-          const dayDate = new Date(date);
+        {weekDays.map((date) => {
           const isTodayDate = isToday(date);
           return (
             <div key={date} style={{
@@ -58,7 +54,6 @@ export function ScheduleView() {
         })}
       </div>
 
-      {/* Calendar Grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(7, 1fr)',
@@ -97,7 +92,6 @@ export function ScheduleView() {
         })}
       </div>
 
-      {/* Legend */}
       <div style={{
         display: 'flex',
         flexWrap: 'wrap',
