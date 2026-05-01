@@ -1,57 +1,175 @@
-import React from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { theme } from '../theme';
+import { colors, typography, spacing, borderRadius, shadow } from '../theme';
 
-export const SettingsScreen: React.FC = () => {
+export function SettingsScreen() {
   const navigate = useNavigate();
-  const { currentUser, notificationsEnabled, setNotificationsEnabled } = useStore();
+  const { currentUser, logout, settings, updateSettings, onboarding } = useStore();
 
-  if (!currentUser) { navigate('/auth'); return null; }
+  const [notifications, setNotifications] = useState(settings.notifications);
+  const [slaSettings, setSlaSettings] = useState(settings.escalation);
+
+  const handleNotificationToggle = (key: keyof typeof notifications) => {
+    const updated = { ...notifications, [key]: !notifications[key] };
+    setNotifications(updated);
+    updateSettings({ notifications: updated });
+  };
+
+  const handleSlaChange = (key: keyof typeof slaSettings, value: number) => {
+    const updated = { ...slaSettings, [key]: value };
+    setSlaSettings(updated);
+    updateSettings({ escalation: updated });
+  };
+
+  const slaLabels: Record<string, string> = {
+    pickup_sla: 'Pickup SLA (min)',
+    dropoff_sla: 'Dropoff SLA (min)',
+    homework_sla: 'Homework SLA (min)',
+    errand_sla: 'Errand SLA (min)',
+    tuition_sla: 'Tuition SLA (min)',
+    meal_sla: 'Meal SLA (min)',
+    shopping_sla: 'Shopping SLA (min)',
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.colors.background, paddingBottom: 80 }}>
-      <div style={{ background: theme.colors.primary, padding: '16px', color: '#fff' }}>
-        <div style={{ fontSize: 20, fontWeight: 700 }}>Settings</div>
-      </div>
-      <div style={{ padding: '0 16px', marginTop: 16 }}>
-        {/* Profile */}
-        <div style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, boxShadow: theme.shadows.card, display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-          <div style={{ width: 48, height: 48, borderRadius: '50%', background: theme.colors.accent, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, fontWeight: 700 }}>{currentUser.name.charAt(0)}</div>
+    <div style={{ padding: spacing.md, paddingBottom: 80 }}>
+      <h1 style={{ ...typography.heading, marginBottom: spacing.md }}>Settings</h1>
+
+      {/* Profile */}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Profile</h3>
+        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.md }}>
+          <div style={{
+            width: 48,
+            height: 48,
+            borderRadius: '50%',
+            background: colors.primary,
+            color: colors.card,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            ...typography.subheading,
+          }}>{currentUser?.avatar || '?'}</div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: 16 }}>{currentUser.name}</div>
-            <div style={{ fontSize: 13, color: theme.colors.textSecondary }}>{currentUser.email}</div>
-            <div style={{ fontSize: 11, color: theme.colors.accent, fontWeight: 600, textTransform: 'uppercase', marginTop: 2 }}>{currentUser.role}</div>
+            <div style={{ ...typography.subheading }}>{currentUser?.name}</div>
+            <div style={{ ...typography.small, color: colors.textSecondary }}>{currentUser?.role}</div>
           </div>
         </div>
-        {/* Notification Toggles */}
-        <div style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, boxShadow: theme.shadows.card, marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Notifications</div>
-          {[
-            { label: 'Push Notifications', key: 'push', value: notificationsEnabled },
-            { label: 'Task Reminders', key: 'reminders', value: notificationsEnabled },
-            { label: 'Escalation Alerts', key: 'escalations', value: true },
-          ].map((item) => (
-            <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${theme.colors.border}` }}>
-              <span style={{ fontSize: 14 }}>{item.label}</span>
-              <button onClick={() => item.key !== 'escalations' && setNotificationsEnabled(!item.value)} style={{ width: 44, height: 24, borderRadius: 12, border: 'none', background: item.value ? theme.colors.success : theme.colors.border, cursor: item.key !== 'escalations' ? 'pointer' : 'default', position: 'relative', opacity: item.key === 'escalations' ? 0.6 : 1 }}>
-                <div style={{ width: 20, height: 20, borderRadius: '50%', background: '#fff', position: 'absolute', top: 2, left: item.value ? 22 : 2, transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
-              </button>
-            </div>
-          ))}
+        <div style={{ ...typography.small, color: colors.textSecondary, marginTop: spacing.sm }}>
+          {currentUser?.email}
         </div>
-        {/* Escalation Config */}
-        <div style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, boxShadow: theme.shadows.card, marginBottom: 16 }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Escalation Settings</div>
-          <div style={{ fontSize: 13, color: theme.colors.textSecondary }}>
-            <div style={{ marginBottom: 8 }}>⏰ Auto-escalate after: <strong>30 minutes</strong> overdue</div>
-            <div style={{ marginBottom: 8 }}>📍 GPS lost alert: <strong>5 minutes</strong> no signal</div>
-            <div>📞 Emergency contact: <strong>Helper's phone</strong></div>
+      </div>
+
+      {/* Notifications */}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Notifications</h3>
+        {Object.entries(notifications).map(([key, value]) => (
+          <label key={key} style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: `${spacing.sm} 0`,
+            borderBottom: `1px solid ${colors.border}`,
+            cursor: 'pointer',
+          }}>
+            <span style={{ ...typography.body }}>{key.charAt(0).toUpperCase() + key.slice(1)}</span>
+            <input
+              type="checkbox"
+              checked={value as boolean}
+              onChange={() => handleNotificationToggle(key as any)}
+              style={{ width: 20, height: 20 }}
+            />
+          </label>
+        ))}
+      </div>
+
+      {/* SLA Settings */}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Escalation Thresholds</h3>
+        {Object.entries(slaLabels).map(([key, label]) => (
+          <div key={key} style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: `${spacing.sm} 0`,
+            borderBottom: `1px solid ${colors.border}`,
+          }}>
+            <span style={{ ...typography.small }}>{label}</span>
+            <input
+              type="number"
+              value={(slaSettings as any)[key]}
+              onChange={e => handleSlaChange(key as any, parseInt(e.target.value) || 0)}
+              style={{
+                width: 60,
+                padding: spacing.xs,
+                borderRadius: borderRadius.sm,
+                border: `1px solid ${colors.border}`,
+                textAlign: 'center',
+                ...typography.small,
+              }}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Onboarding Info */}
+      {onboarding && (
+        <div style={{
+          background: colors.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          marginBottom: spacing.md,
+          boxShadow: shadow.card,
+        }}>
+          <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Family Info</h3>
+          <div style={{ ...typography.small, color: colors.textSecondary }}>
+            Helper: {onboarding.helperName || 'Not set'}
+          </div>
+          <div style={{ ...typography.small, color: colors.textSecondary }}>
+            Children: {onboarding.children?.filter(c => c).join(', ') || 'Not set'}
           </div>
         </div>
-        {/* Sign Out */}
-        <button onClick={() => { useStore.getState().setCurrentUser(null); navigate('/auth'); }} style={{ width: '100%', padding: 14, borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.danger}`, background: 'transparent', color: theme.colors.danger, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Sign Out</button>
+      )}
+
+      {/* Logout */}
+      <button
+        onClick={() => { logout(); navigate('/auth'); }}
+        style={{
+          width: '100%',
+          padding: spacing.md,
+          borderRadius: borderRadius.sm,
+          background: colors.alert + '20',
+          color: colors.alert,
+          border: 'none',
+          ...typography.button,
+          minHeight: 48,
+          cursor: 'pointer',
+          marginTop: spacing.md,
+        }}
+      >Logout</button>
+
+      <div style={{ textAlign: 'center', marginTop: spacing.lg, ...typography.small, color: colors.textSecondary }}>
+        Molofu3 v3.7.0 — Family Command Centre
       </div>
     </div>
   );
-};
+}

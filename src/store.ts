@@ -1,65 +1,152 @@
 import { create } from 'zustand';
-import type { User, Task, Message, Escalation } from './types';
+import type { User, Task, Message, Escalation, Settings, OnboardingData, UserRole } from './types';
 
-interface AppState {
+interface AuthSlice {
   currentUser: User | null;
-  setCurrentUser: (user: User | null) => void;
+  isAuthenticated: boolean;
+  login: (user: User) => void;
+  logout: () => void;
+}
+
+interface TasksSlice {
   tasks: Task[];
   addTask: (task: Task) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
+  deleteTask: (id: string) => void;
+  getTasksByAssignee: (userId: string) => Task[];
+  getTodayTasks: () => Task[];
+}
+
+interface MessagesSlice {
   messages: Message[];
-  addMessage: (msg: Message) => void;
-  markMessagesRead: (task_id: string) => void;
+  addMessage: (message: Message) => void;
+  markRead: (messageId: string) => void;
+  getMessagesByTask: (taskId: string) => Message[];
+}
+
+interface EscalationsSlice {
   escalations: Escalation[];
-  addEscalation: (esc: Escalation) => void;
+  addEscalation: (escalation: Escalation) => void;
   resolveEscalation: (id: string) => void;
-  notificationsEnabled: boolean;
-  setNotificationsEnabled: (enabled: boolean) => void;
+  getActiveEscalations: () => Escalation[];
 }
 
-const STORAGE_KEY = 'molofu3_store';
-
-function loadFromStorage(): Partial<AppState> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
-  return {};
+interface SettingsSlice {
+  settings: Settings;
+  updateSettings: (settings: Partial<Settings>) => void;
 }
 
-export const useStore = create<AppState>((set) => {
-  const initial = loadFromStorage();
-  return {
-    currentUser: initial.currentUser || null,
-    setCurrentUser: (user) => set({ currentUser: user }),
-    tasks: initial.tasks || [],
-    addTask: (task) => set((s) => ({ tasks: [...s.tasks, task] })),
-    updateTask: (id, updates) => set((s) => ({
-      tasks: s.tasks.map((t) => t.id === id ? { ...t, ...updates } : t),
-    })),
-    messages: initial.messages || [],
-    addMessage: (msg) => set((s) => ({ messages: [...s.messages, msg] })),
-    markMessagesRead: (task_id) => set((s) => ({
-      messages: s.messages.map((m) => m.task_id === task_id ? { ...m, read: true } : m),
-    })),
-    escalations: initial.escalations || [],
-    addEscalation: (esc) => set((s) => ({ escalations: [...s.escalations, esc] })),
-    resolveEscalation: (id) => set((s) => ({
-      escalations: s.escalations.map((e) => e.id === id ? { ...e, resolved: true } : e),
-    })),
-    notificationsEnabled: initial.notificationsEnabled !== undefined ? initial.notificationsEnabled : true,
-    setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
+interface OnboardingSlice {
+  onboarding: OnboardingData | null;
+  isOnboardingComplete: boolean;
+  setOnboarding: (data: OnboardingData) => void;
+  completeOnboarding: () => void;
+}
+
+export const useStore = create<
+  AuthSlice & TasksSlice & MessagesSlice & EscalationsSlice & SettingsSlice & OnboardingSlice
+>((set, get) => {
+  // Load from localStorage
+  const load = <T>(key: string, fallback: T): T => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored ? JSON.parse(stored) : fallback;
+    } catch {
+      return fallback;
+    }
   };
-});
 
-useStore.subscribe((state) => {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      currentUser: state.currentUser,
-      tasks: state.tasks,
-      messages: state.messages,
-      escalations: state.escalations,
-      notificationsEnabled: state.notificationsEnabled,
-    }));
-  } catch { /* ignore */ }
+  const savedAuth = load<{ user: User | null }>('molofu_auth', { user: null });
+  const savedTasks = load<Task[]>('molofu_tasks', []);
+  const savedMessages = load<Message[]>('molofu_messages', []);
+  const savedEscalations = load<Escalation[]>('molofu_escalations', []);
+  const savedSettings = load<Settings>('molofu_settings', {
+    notifications: { push: true, sound: true, email: false },
+    escalation: { pickup_sla: 15, dropoff_sla: 15, homework_sla: 30, errand_sla: 45, tuition_sla: 10, meal_sla: 30, shopping_sla: 60 },
+  });
+  const savedOnboarding = load<OnboardingData | null>('molofu_onboarding', null);
+
+  return {
+    // Auth
+    currentUser: savedAuth.user,
+    isAuthenticated: !!savedAuth.user,
+    login: (user) => {
+      set({ currentUser: user, isAuthenticated: true });
+      localStorage.setItem('molofu_auth', JSON.stringify({ user }));
+    },
+    logout: () => {
+      set({ currentUser: null, isAuthenticated: false });
+      localStorage.removeItem('molofu_auth');
+    },
+
+    // Tasks
+    tasks: savedTasks,
+    addTask: (task) => {
+      const tasks = [...get().tasks, task];
+      set({ tasks });
+      localStorage.setItem('molofu_tasks', JSON.stringify(tasks));
+    },
+    updateTask: (id, updates) => {
+      const tasks = get().tasks.map(t => t.id === id ? { ...t, ...updates } : t);
+      set({ tasks });
+      localStorage.setItem('molofu_tasks', JSON.stringify(tasks));
+    },
+    deleteTask: (id) => {
+      const tasks = get().tasks.filter(t => t.id !== id);
+      set({ tasks });
+      localStorage.setItem('molofu_tasks', JSON.stringify(tasks));
+    },
+    getTasksByAssignee: (userId) => get().tasks.filter(t => t.assigned_to === userId),
+    getTodayTasks: () => {
+      const today = new Date().toISOString().split('T')[0];
+      return get().tasks.filter(t => t.due_date.startsWith(today));
+    },
+
+    // Messages
+    messages: savedMessages,
+    addMessage: (message) => {
+      const messages = [...get().messages, message];
+      set({ messages });
+      localStorage.setItem('molofu_messages', JSON.stringify(messages));
+    },
+    markRead: (messageId) => {
+      const messages = get().messages.map(m => m.id === messageId ? { ...m, read: true } : m);
+      set({ messages });
+      localStorage.setItem('molofu_messages', JSON.stringify(messages));
+    },
+    getMessagesByTask: (taskId) => get().messages.filter(m => m.task_id === taskId),
+
+    // Escalations
+    escalations: savedEscalations,
+    addEscalation: (escalation) => {
+      const escalations = [...get().escalations, escalation];
+      set({ escalations });
+      localStorage.setItem('molofu_escalations', JSON.stringify(escalations));
+    },
+    resolveEscalation: (id) => {
+      const escalations = get().escalations.map(e => e.id === id ? { ...e, resolved: true } : e);
+      set({ escalations });
+      localStorage.setItem('molofu_escalations', JSON.stringify(escalations));
+    },
+    getActiveEscalations: () => get().escalations.filter(e => !e.resolved),
+
+    // Settings
+    settings: savedSettings,
+    updateSettings: (updates) => {
+      const settings = { ...get().settings, ...updates };
+      set({ settings });
+      localStorage.setItem('molofu_settings', JSON.stringify(settings));
+    },
+
+    // Onboarding
+    onboarding: savedOnboarding,
+    isOnboardingComplete: !!savedOnboarding,
+    setOnboarding: (data) => {
+      set({ onboarding: data });
+      localStorage.setItem('molofu_onboarding', JSON.stringify(data));
+    },
+    completeOnboarding: () => {
+      set({ isOnboardingComplete: true });
+    },
+  };
 });

@@ -1,33 +1,39 @@
-import { useStore } from '../store';
+export async function requestNotificationPermission(): Promise<boolean> {
+  if (!('Notification' in window)) {
+    console.warn('Browser does not support notifications');
+    return false;
+  }
 
-let notificationTimeouts: Map<string, ReturnType<typeof setTimeout>> = new Map();
+  if (Notification.permission === 'granted') {
+    return true;
+  }
 
-export function scheduleReminder(taskId: string, taskTitle: string, dueDate: string, minutesBefore = 30) {
-  cancelReminder(taskId);
-  const dueTime = new Date(dueDate).getTime();
-  const reminderTime = dueTime - minutesBefore * 60 * 1000;
-  const delay = reminderTime - Date.now();
-  if (delay > 0) {
-    const timeout = setTimeout(() => {
-      sendNotification(`Reminder: ${taskTitle}`, `This task is due in ${minutesBefore} minutes.`);
+  if (Notification.permission === 'denied') {
+    return false;
+  }
+
+  const permission = await Notification.requestPermission();
+  return permission === 'granted';
+}
+
+export function showNotification(title: string, body: string): void {
+  if (Notification.permission === 'granted') {
+    new Notification(title, {
+      body,
+      icon: '/vite.svg',
+    });
+  }
+}
+
+export function scheduleReminder(taskTitle: string, dueTime: string): void {
+  const due = new Date(dueTime);
+  const now = new Date();
+  const reminderTime = new Date(due.getTime() - 15 * 60 * 1000); // 15 min before
+
+  if (reminderTime > now) {
+    const delay = reminderTime.getTime() - now.getTime();
+    setTimeout(() => {
+      showNotification('Molofu3 Reminder', `${taskTitle} is due in 15 minutes`);
     }, delay);
-    notificationTimeouts.set(taskId, timeout);
   }
-}
-
-export function cancelReminder(taskId: string) {
-  const timeout = notificationTimeouts.get(taskId);
-  if (timeout) { clearTimeout(timeout); notificationTimeouts.delete(taskId); }
-}
-
-export function sendNotification(title: string, body: string) {
-  if (useStore.getState().notificationsEnabled) {
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, { body });
-    }
-  }
-}
-
-export function requestNotificationPermission() {
-  if ('Notification' in window) Notification.requestPermission();
 }

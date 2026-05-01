@@ -1,46 +1,73 @@
-const { readFileSync, statSync } = require('node:fs');
-const { join, extname } = require('node:path');
-const http = require('node:http');
+const http = require('http');
+const fs = require('fs');
+const path = require('path');
 
 const PORT = process.env.PORT || 3000;
-const DIST = join(process.cwd(), 'dist');
+const DIST_DIR = path.join(__dirname, 'dist');
 
-const MIME = {
-  '.html': 'text/html; charset=utf-8',
-  '.js': 'application/javascript; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
+const mimeTypes = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
   '.json': 'application/json',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.gif': 'image/gif',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.woff': 'font/woff',
+  '.woff2': 'font/woff2',
+  '.ttf': 'font/ttf',
 };
 
 const server = http.createServer((req, res) => {
-  const urlPath = req.url.split('?')[0];
-  const filePath = join(DIST, urlPath === '/' ? 'index.html' : urlPath);
+  // Parse URL
+  let urlPath = req.url.split('?')[0];
+  if (urlPath === '/') urlPath = '/index.html';
 
-  if (!filePath.startsWith(DIST)) {
-    res.writeHead(403); res.end('Forbidden'); return;
-  }
+  // Build file path
+  let filePath = path.join(DIST_DIR, urlPath);
 
-  try {
-    const stat = statSync(filePath);
-    if (stat.isFile()) {
-      const content = readFileSync(filePath);
-      res.writeHead(200, { 'Content-Type': MIME[extname(filePath)] || 'application/octet-stream' });
-      res.end(content);
-      return;
+  // Check if file exists
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const ext = path.extname(filePath).toLowerCase();
+    const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(500);
+        res.end('Server error');
+        return;
+      }
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    });
+  } else {
+    // SPA fallback — serve index.html for all non-asset routes
+    const indexPath = path.join(DIST_DIR, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      fs.readFile(indexPath, (err, data) => {
+        if (err) {
+          res.writeHead(500);
+          res.end('Server error');
+          return;
+        }
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(data);
+      });
+    } else {
+      res.writeHead(404);
+      res.end('Not found');
     }
-  } catch { /* not found */ }
-
-  try {
-    const index = readFileSync(join(DIST, 'index.html'));
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(index);
-  } catch {
-    res.writeHead(500); res.end('Server error');
   }
 });
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Molofu3 serving on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Molofu3 server running on http://localhost:${PORT}`);
+  console.log(`Serving from ${DIST_DIR}`);
+});
+
+server.on('error', (err) => {
+  console.error('Server error:', err.message);
+  process.exit(1);
 });

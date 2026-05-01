@@ -1,26 +1,110 @@
-import React from 'react';
-import { theme } from '../theme';
+import { useNavigate } from 'react-router-dom';
 import type { Task } from '../types';
+import { colors, typography, spacing, borderRadius, shadow, statusColors, priorityColors, taskTypeLabels } from '../theme';
+import { formatTime, timeAgo } from '../utils/time';
 
-const priorityColors: Record<string, string> = { high: theme.colors.danger, medium: theme.colors.warning, low: theme.colors.info };
-const statusColors: Record<string, string> = { pending: theme.colors.warning, accepted: theme.colors.info, in_progress: theme.colors.primary, arrived: theme.colors.success, done: theme.colors.success };
-const typeIcons: Record<string, string> = { pickup: '🚗', dropoff: '📍', homework: '📚', errand: '🛒', tuition: '🎓' };
+interface TaskCardProps {
+  task: Task;
+  showActions?: boolean;
+  onAction?: (action: string) => void;
+}
 
-interface TaskCardProps { task: Task; onPress?: () => void; compact?: boolean; }
+export function TaskCard({ task, showActions, onAction }: TaskCardProps) {
+  const navigate = useNavigate();
+  const statusColor = statusColors[task.status] || colors.textSecondary;
+  const priorityColor = priorityColors[task.priority] || colors.textSecondary;
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onPress, compact }) => (
-  <div onClick={onPress} style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: compact ? 12 : 16, boxShadow: theme.shadows.card, borderLeft: `4px solid ${priorityColors[task.priority] || theme.colors.border}`, cursor: onPress ? 'pointer' : 'default', marginBottom: 8, opacity: task.status === 'done' ? 0.6 : 1 }}>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <span style={{ fontSize: 20 }}>{typeIcons[task.task_type] || '📋'}</span>
-        <span style={{ fontSize: 15, fontWeight: 600, color: theme.colors.textPrimary }}>{task.title}</span>
+  return (
+    <div
+      onClick={() => navigate(`/tasks/${task.id}`)}
+      style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.sm,
+        boxShadow: shadow.card,
+        cursor: 'pointer',
+        borderLeft: `4px solid ${statusColor}`,
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ ...typography.subheading, marginBottom: 4 }}>{task.title}</div>
+          <div style={{ ...typography.small, color: colors.textSecondary }}>
+            {taskTypeLabels[task.task_type]} • Due {formatTime(task.due_date)}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: spacing.sm, alignItems: 'center' }}>
+          <span style={{
+            ...typography.small,
+            padding: `${spacing.xs} ${spacing.sm}`,
+            borderRadius: borderRadius.sm,
+            background: priorityColor + '20',
+            color: priorityColor,
+            fontWeight: 600,
+          }}>{task.priority}</span>
+          <span style={{
+            ...typography.small,
+            padding: `${spacing.xs} ${spacing.sm}`,
+            borderRadius: borderRadius.sm,
+            background: statusColor + '20',
+            color: statusColor,
+            fontWeight: 600,
+          }}>{task.status.replace('_', ' ')}</span>
+        </div>
       </div>
-      <span style={{ background: priorityColors[task.priority], color: '#fff', padding: '2px 8px', borderRadius: theme.borderRadius.pill, fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>{task.priority}</span>
+      {showActions && onAction && (
+        <div style={{ display: 'flex', gap: spacing.sm, marginTop: spacing.sm }}>
+          {task.status === 'pending' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAction('accept'); }}
+              style={{
+                flex: 1,
+                padding: spacing.md,
+                borderRadius: borderRadius.sm,
+                background: colors.primary,
+                color: colors.card,
+                border: 'none',
+                ...typography.button,
+                minHeight: 44,
+                cursor: 'pointer',
+              }}
+            >Accept</button>
+          )}
+          {task.status === 'accepted' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAction('start'); }}
+              style={{
+                flex: 1,
+                padding: spacing.md,
+                borderRadius: borderRadius.sm,
+                background: colors.primary,
+                color: colors.card,
+                border: 'none',
+                ...typography.button,
+                minHeight: 44,
+                cursor: 'pointer',
+              }}
+            >Start</button>
+          )}
+          {(task.status === 'in_progress' || task.status === 'arrived') && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onAction('done'); }}
+              style={{
+                flex: 1,
+                padding: spacing.md,
+                borderRadius: borderRadius.sm,
+                background: colors.secondary,
+                color: colors.card,
+                border: 'none',
+                ...typography.button,
+                minHeight: 44,
+                cursor: 'pointer',
+              }}
+            >Done</button>
+          )}
+        </div>
+      )}
     </div>
-    {!compact && <div style={{ fontSize: 13, color: theme.colors.textSecondary, marginBottom: 8 }}>{task.description}</div>}
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <span style={{ background: statusColors[task.status], color: '#fff', padding: '2px 8px', borderRadius: theme.borderRadius.pill, fontSize: 11, fontWeight: 500 }}>{task.status.replace('_', ' ')}</span>
-      {task.location && <span style={{ fontSize: 12, color: theme.colors.textSecondary }}>📍 {task.location}</span>}
-    </div>
-  </div>
-);
+  );
+}

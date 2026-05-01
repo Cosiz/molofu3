@@ -1,88 +1,269 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { theme } from '../theme';
+import { StatusStepper } from '../components/StatusStepper';
 import { MessageBubble } from '../components/MessageBubble';
-import { formatTime } from '../utils/time';
+import { colors, typography, spacing, borderRadius, shadow, statusColors, taskTypeLabels } from '../theme';
+import { formatDateTime, timeAgo } from '../utils/time';
 
-const statusFlow = ['pending', 'accepted', 'in_progress', 'arrived', 'done'] as const;
-const statusLabels: Record<string, string> = { pending: '⏳ Assigned', accepted: '✅ Accepted', in_progress: '🚗 In Transit', arrived: '📍 Arrived', done: '✔️ Done' };
-const priorityColors: Record<string, string> = { high: theme.colors.danger, medium: theme.colors.warning, low: theme.colors.info };
-
-export const TaskDetail: React.FC = () => {
+export function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tasks, messages, updateTask, addMessage, currentUser } = useStore();
+  const { currentUser, tasks, updateTask, messages, addMessage } = useStore();
   const [newMessage, setNewMessage] = useState('');
 
-  const task = tasks.find((t) => t.id === id);
-  if (!task) return <div style={{ padding: 24 }}>Task not found</div>;
+  const task = tasks.find(t => t.id === id);
+  const taskMessages = messages.filter(m => m.task_id === id).sort((a, b) =>
+    new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  );
 
-  const currentStatusIdx = statusFlow.indexOf(task.status as typeof statusFlow[number]);
-  const taskMessages = messages.filter((m) => m.task_id === task.id);
-  const nextStatus = statusFlow[currentStatusIdx + 1];
+  useEffect(() => {
+    // Mark messages as read
+    taskMessages.forEach(m => {
+      if (m.from_user_id !== currentUser?.id && !m.read) {
+        // Would call markRead in a real implementation
+      }
+    });
+  }, [taskMessages]);
 
-  const sendMessage = () => {
+  if (!task) {
+    return (
+      <div style={{ padding: spacing.xl, textAlign: 'center' }}>
+        <p style={{ ...typography.body, color: colors.textSecondary }}>Task not found</p>
+        <button onClick={() => navigate('/tasks')} style={{
+          marginTop: spacing.md,
+          padding: spacing.md,
+          borderRadius: borderRadius.sm,
+          background: colors.primary,
+          color: colors.card,
+          border: 'none',
+          cursor: 'pointer',
+        }}>Back to Tasks</button>
+      </div>
+    );
+  }
+
+  const statusColor = statusColors[task.status] || colors.textSecondary;
+  const isCommander = currentUser?.role === 'commander';
+  const isHelper = currentUser?.role === 'helper';
+
+  const handleStatusAction = (action: string) => {
+    const statusMap: Record<string, string> = {
+      accept: 'accepted',
+      start: 'in_progress',
+      arrive: 'arrived',
+      done: 'done',
+    };
+    const newStatus = statusMap[action];
+    if (newStatus) {
+      updateTask(task.id, {
+        status: newStatus as any,
+        ...(newStatus === 'done' ? { completed_at: new Date().toISOString() } : {}),
+      });
+    }
+  };
+
+  const handleSendMessage = () => {
     if (!newMessage.trim() || !currentUser) return;
-    addMessage({ id: `msg-${Date.now()}`, task_id: task.id, from_user_id: currentUser.id, text: newMessage.trim(), timestamp: new Date().toISOString(), read: false });
+    addMessage({
+      id: `msg-${Date.now()}`,
+      task_id: task.id,
+      from_user_id: currentUser.id,
+      text: newMessage.trim(),
+      timestamp: new Date().toISOString(),
+      read: false,
+    });
     setNewMessage('');
   };
 
+  const steps = task.task_type === 'pickup' || task.task_type === 'dropoff'
+    ? ['pending', 'accepted', 'in_progress', 'arrived', 'done']
+    : ['pending', 'accepted', 'in_progress', 'done'];
+
+  const currentStepIndex = steps.indexOf(task.status);
+  const nextStep = steps[currentStepIndex + 1];
+
   return (
-    <div style={{ minHeight: '100vh', background: theme.colors.background, paddingBottom: 80 }}>
-      <div style={{ background: theme.colors.primary, padding: '16px', color: '#fff', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', color: '#fff', fontSize: 20, cursor: 'pointer' }}>←</button>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>{task.title}</div>
+    <div style={{ padding: spacing.md, paddingBottom: 80 }}>
+      {/* Header */}
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          background: 'none',
+          border: 'none',
+          color: colors.primary,
+          ...typography.body,
+          cursor: 'pointer',
+          marginBottom: spacing.md,
+          padding: 0,
+        }}
+      >← Back</button>
+
+      {/* Task Info */}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.sm }}>
+          <h2 style={{ ...typography.heading, flex: 1 }}>{task.title}</h2>
+          <span style={{
+            ...typography.small,
+            padding: `${spacing.xs} ${spacing.sm}`,
+            borderRadius: borderRadius.sm,
+            background: statusColor + '20',
+            color: statusColor,
+            fontWeight: 600,
+            marginLeft: spacing.sm,
+          }}>{task.status.replace('_', ' ')}</span>
+        </div>
+
+        {task.description && (
+          <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.sm }}>{task.description}</p>
+        )}
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.sm, ...typography.small, color: colors.textSecondary }}>
+          <span>{taskTypeLabels[task.task_type]}</span>
+          <span>•</span>
+          <span>Due {formatDateTime(task.due_date)}</span>
+          {task.location && (
+            <>
+              <span>•</span>
+              <span> {task.location}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Status Stepper */}
-      <div style={{ padding: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        {statusFlow.map((s, i) => (
-          <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
-            <div style={{ width: 24, height: 24, borderRadius: '50%', background: i <= currentStatusIdx ? theme.colors.success : theme.colors.border, color: i <= currentStatusIdx ? '#fff' : theme.colors.textSecondary, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700 }}>{i + 1}</div>
-            <div style={{ fontSize: 9, marginTop: 4, color: i <= currentStatusIdx ? theme.colors.textPrimary : theme.colors.textSecondary, textAlign: 'center' }}>{statusLabels[s].split(' ')[0]}</div>
-          </div>
-        ))}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginBottom: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <StatusStepper task={task} />
       </div>
 
-      {/* Info Grid */}
-      <div style={{ padding: '0 16px' }}>
-        <div style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, marginBottom: 16, boxShadow: theme.shadows.card }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-            <span style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Priority</span>
-            <span style={{ background: priorityColors[task.priority], color: '#fff', padding: '2px 8px', borderRadius: theme.borderRadius.pill, fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>{task.priority}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-            <span style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Due</span>
-            <span style={{ fontSize: 14, fontWeight: 600 }}>{formatTime(task.due_date)}</span>
-          </div>
-          {task.location && (<div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}><span style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Location</span><span style={{ fontSize: 14 }}>📍 {task.location}</span></div>)}
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ color: theme.colors.textSecondary, fontSize: 13 }}>Type</span>
-            <span style={{ fontSize: 14 }}>{task.task_type}</span>
-          </div>
+      {/* Action Buttons (Helper only) */}
+      {isHelper && nextStep && task.status !== 'done' && (
+        <div style={{ marginBottom: spacing.md }}>
+          <button
+            onClick={() => handleStatusAction(
+              task.status === 'pending' ? 'accept' :
+              task.status === 'accepted' ? 'start' :
+              task.status === 'in_progress' && (task.task_type === 'pickup' || task.task_type === 'dropoff') ? 'arrive' :
+              'done'
+            )}
+            style={{
+              width: '100%',
+              padding: spacing.md,
+              borderRadius: borderRadius.sm,
+              background: colors.primary,
+              color: colors.card,
+              border: 'none',
+              ...typography.button,
+              minHeight: 56,
+              fontSize: 20,
+              cursor: 'pointer',
+            }}
+          >
+            {task.status === 'pending' ? '✅ Accept Task' :
+             task.status === 'accepted' ? '🚗 Start' :
+             task.status === 'in_progress' && (task.task_type === 'pickup' || task.task_type === 'dropoff') ? '📍 Arrived' :
+             '✅ Complete'}
+          </button>
+        </div>
+      )}
+
+      {/* Commander Actions */}
+      {isCommander && (
+        <div style={{ display: 'flex', gap: spacing.sm, marginBottom: spacing.md }}>
+          <button
+            onClick={() => { updateTask(task.id, { priority: task.priority === 'high' ? 'medium' : 'high' }); }}
+            style={{
+              flex: 1,
+              padding: spacing.sm,
+              borderRadius: borderRadius.sm,
+              background: colors.background,
+              border: `1px solid ${colors.border}`,
+              ...typography.small,
+              cursor: 'pointer',
+            }}
+          >Toggle Priority</button>
+          <button
+            onClick={() => { updateTask(task.id, { status: 'pending' }); }}
+            style={{
+              flex: 1,
+              padding: spacing.sm,
+              borderRadius: borderRadius.sm,
+              background: colors.background,
+              border: `1px solid ${colors.border}`,
+              ...typography.small,
+              cursor: 'pointer',
+              color: colors.alert,
+            }}
+          >Reset Status</button>
+        </div>
+      )}
+
+      {/* In-Task Messaging */}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>💬 Messages</h3>
+
+        <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: spacing.md }}>
+          {taskMessages.length === 0 ? (
+            <p style={{ ...typography.small, color: colors.textSecondary, textAlign: 'center' }}>No messages yet</p>
+          ) : (
+            taskMessages.map(msg => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isSent={msg.from_user_id === currentUser?.id}
+              />
+            ))
+          )}
         </div>
 
-        {nextStatus && (
-          <button onClick={() => updateTask(task.id, { status: nextStatus })} style={{ width: '100%', padding: 14, borderRadius: theme.borderRadius.md, border: 'none', background: theme.colors.accent, color: '#fff', fontSize: 16, fontWeight: 700, cursor: 'pointer', marginBottom: 16 }}>
-            Mark as {statusLabels[nextStatus]}
-          </button>
-        )}
-
-        {/* Message Feed */}
-        <div style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, marginBottom: 16, boxShadow: theme.shadows.card }}>
-          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>Messages</div>
-          <div style={{ maxHeight: 200, overflowY: 'auto', marginBottom: 12 }}>
-            {taskMessages.length === 0 ? (<div style={{ textAlign: 'center', color: theme.colors.textSecondary, fontSize: 13 }}>No messages yet</div>) : (
-              taskMessages.map((msg) => (<MessageBubble key={msg.id} text={msg.text} isOwn={msg.from_user_id === currentUser?.id} timestamp={formatTime(msg.timestamp)} read={msg.read} />))
-            )}
-          </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <input value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..." style={{ flex: 1, padding: '8px 12px', borderRadius: theme.borderRadius.md, border: `1px solid ${theme.colors.border}`, fontSize: 14 }} onKeyDown={(e) => { if (e.key === 'Enter') sendMessage(); }} />
-            <button onClick={sendMessage} style={{ padding: '8px 16px', borderRadius: theme.borderRadius.md, border: 'none', background: theme.colors.info, color: '#fff', fontWeight: 600, cursor: 'pointer' }}>Send</button>
-          </div>
+        <div style={{ display: 'flex', gap: spacing.sm }}>
+          <input
+            type="text"
+            value={newMessage}
+            onChange={e => setNewMessage(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleSendMessage()}
+            placeholder="Type a message..."
+            style={{
+              flex: 1,
+              padding: spacing.md,
+              borderRadius: borderRadius.sm,
+              border: `1px solid ${colors.border}`,
+              ...typography.body,
+            }}
+          />
+          <button
+            onClick={handleSendMessage}
+            disabled={!newMessage.trim()}
+            style={{
+              padding: `0 ${spacing.md}`,
+              borderRadius: borderRadius.sm,
+              background: newMessage.trim() ? colors.primary : colors.textLight,
+              color: colors.card,
+              border: 'none',
+              ...typography.button,
+              minHeight: 44,
+              cursor: newMessage.trim() ? 'pointer' : 'not-allowed',
+            }}
+          >Send</button>
         </div>
       </div>
     </div>
   );
-};
+}

@@ -1,86 +1,151 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useStore } from '../store';
-import { theme } from '../theme';
 import { TaskCard } from '../components/TaskCard';
-import { startEscalationPolling } from '../services/escalation';
-import { formatTime, isOverdue } from '../utils/time';
+import { EscalationBanner } from '../components/EscalationBanner';
+import { CreateTaskForm } from '../components/CreateTaskForm';
+import { colors, typography, spacing, borderRadius, shadow } from '../theme';
+import { isToday } from '../utils/time';
 
-export const CommanderDashboard: React.FC = () => {
-  const navigate = useNavigate();
-  const { currentUser, tasks, escalations } = useStore();
-  const [pollStarted, setPollStarted] = useState(false);
+export function CommanderDashboard() {
+  const { currentUser, tasks, escalations, isOnboardingComplete } = useStore();
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
-  useEffect(() => {
-    if (!currentUser) { navigate('/auth'); return; }
-    if (!pollStarted) { startEscalationPolling(); setPollStarted(true); }
-  }, [currentUser, navigate, pollStarted]);
+  const todayTasks = tasks.filter(t => isToday(t.due_date));
+  const activeEscalations = escalations.filter(e => !e.resolved);
+  const pendingCount = todayTasks.filter(t => t.status === 'pending').length;
+  const inProgressCount = todayTasks.filter(t => t.status === 'in_progress' || t.status === 'accepted').length;
+  const doneCount = todayTasks.filter(t => t.status === 'done').length;
 
-  if (!currentUser) return null;
-
-  const pending = tasks.filter((t) => t.status !== 'done').length;
-  const inProgress = tasks.filter((t) => t.status === 'in_progress' || t.status === 'arrived').length;
-  const done = tasks.filter((t) => t.status === 'done').length;
-  const activeEscalations = escalations.filter((e) => !e.resolved);
-
-  const todayTasks = tasks.filter((t) => {
-    return new Date(t.due_date).toDateString() === new Date().toDateString();
-  }).sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
-
-  const greeting = new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening';
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
 
   return (
-    <div style={{ minHeight: '100vh', background: theme.colors.background, paddingBottom: 80 }}>
+    <div style={{ padding: spacing.md, paddingBottom: 80 }}>
       {/* Header */}
-      <div style={{ background: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`, padding: '24px 16px 32px', color: theme.colors.textInverse }}>
-        <div style={{ fontSize: 14, opacity: 0.8, marginBottom: 4 }}>{new Date().toLocaleDateString('en-HK', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
-        <div style={{ fontSize: 24, fontWeight: 700 }}>Good {greeting}, {currentUser.name.split(' ')[0]}</div>
-      </div>
-
-      {/* Stats Row */}
-      <div style={{ display: 'flex', gap: 8, padding: '0 16px', marginTop: -16 }}>
-        {[
-          { label: 'Pending', count: pending, color: theme.colors.warning },
-          { label: 'Active', count: inProgress, color: theme.colors.info },
-          { label: 'Done', count: done, color: theme.colors.success },
-        ].map((stat) => (
-          <div key={stat.label} style={{ flex: 1, background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, textAlign: 'center', boxShadow: theme.shadows.card, borderTop: `3px solid ${stat.color}` }}>
-            <div style={{ fontSize: 28, fontWeight: 700, color: stat.color }}>{stat.count}</div>
-            <div style={{ fontSize: 12, color: theme.colors.textSecondary }}>{stat.label}</div>
-          </div>
-        ))}
+      <div style={{ marginBottom: spacing.md }}>
+        <h1 style={{ ...typography.heading }}>{greeting()}, {currentUser?.name?.split(' ')[0]}</h1>
+        <p style={{ ...typography.small, color: colors.textSecondary }}>
+          {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
+        </p>
       </div>
 
       {/* Escalation Banner */}
-      {activeEscalations.length > 0 && (
-        <div style={{ margin: '16px', padding: 12, background: theme.colors.danger, color: '#fff', borderRadius: theme.borderRadius.md, fontWeight: 600, fontSize: 14 }}>
-          ⚠️ {activeEscalations.length} task{activeEscalations.length > 1 ? 's are' : ' is'} overdue!
+      <EscalationBanner escalations={escalations} tasks={tasks} />
+
+      {/* Stats Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: spacing.sm, marginBottom: spacing.md }}>
+        <div style={{
+          background: colors.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          textAlign: 'center',
+          boxShadow: shadow.card,
+        }}>
+          <div style={{ ...typography.heading, color: colors.primary }}>{todayTasks.length}</div>
+          <div style={{ ...typography.small, color: colors.textSecondary }}>Tasks Today</div>
         </div>
-      )}
+        <div style={{
+          background: activeEscalations.length > 0 ? colors.alert + '20' : colors.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          textAlign: 'center',
+          boxShadow: shadow.card,
+        }}>
+          <div style={{ ...typography.heading, color: activeEscalations.length > 0 ? colors.alert : colors.primary }}>
+            {activeEscalations.length}
+          </div>
+          <div style={{ ...typography.small, color: colors.textSecondary }}>Alerts</div>
+        </div>
+        <div style={{
+          background: colors.card,
+          borderRadius: borderRadius.md,
+          padding: spacing.md,
+          textAlign: 'center',
+          boxShadow: shadow.card,
+        }}>
+          <div style={{ ...typography.heading, color: colors.secondary }}>{doneCount}/{todayTasks.length}</div>
+          <div style={{ ...typography.small, color: colors.textSecondary }}>Completed</div>
+        </div>
+      </div>
 
       {/* Today's Tasks */}
-      <div style={{ padding: '0 16px', marginTop: 24 }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: theme.colors.textPrimary }}>Today's Tasks</div>
+      <div style={{ marginBottom: spacing.sm }}>
+        <h2 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Today's Tasks</h2>
         {todayTasks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 32, color: theme.colors.textSecondary, fontSize: 14 }}>No tasks for today 🎉</div>
+          <div style={{
+            background: colors.card,
+            borderRadius: borderRadius.md,
+            padding: spacing.lg,
+            textAlign: 'center',
+            color: colors.textSecondary,
+            ...typography.body,
+          }}>
+            No tasks for today. Tap + to create one.
+          </div>
         ) : (
-          todayTasks.map((task) => (
-            <TaskCard key={task.id} task={task} onPress={() => navigate(`/tasks/${task.id}`)} compact />
+          todayTasks.map(task => (
+            <TaskCard key={task.id} task={task} />
           ))
         )}
       </div>
 
-      {/* GPS Preview */}
-      <div style={{ padding: '16px' }}>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, color: theme.colors.textPrimary }}>Helper Status</div>
-        <div style={{ background: theme.colors.surface, borderRadius: theme.borderRadius.md, padding: 16, boxShadow: theme.shadows.card, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 40, height: 40, borderRadius: '50%', background: theme.colors.success, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>📍</div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: 14, color: theme.colors.textPrimary }}>Maria Santos</div>
-            <div style={{ fontSize: 12, color: theme.colors.textSecondary }}>Status: Available</div>
+      {/* GPS Preview Card */}
+      <div style={{
+        background: colors.card,
+        borderRadius: borderRadius.md,
+        padding: spacing.md,
+        marginTop: spacing.md,
+        boxShadow: shadow.card,
+      }}>
+        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>📍 Helper Status</h3>
+        <div style={{
+          background: colors.background,
+          borderRadius: borderRadius.sm,
+          padding: spacing.md,
+          minHeight: 120,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: colors.textSecondary,
+          ...typography.small,
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: spacing.sm }}>️</div>
+            <div>Maria is currently {inProgressCount > 0 ? 'on a task' : 'available'}</div>
+            {inProgressCount > 0 && <div style={{ color: colors.primary, marginTop: 4 }}>● Live tracking active</div>}
           </div>
         </div>
       </div>
+
+      {/* Floating + Button */}
+      <button
+        onClick={() => setShowCreateForm(true)}
+        style={{
+          position: 'fixed',
+          bottom: 80,
+          right: spacing.lg,
+          width: 56,
+          height: 56,
+          borderRadius: '50%',
+          background: colors.primary,
+          color: colors.card,
+          border: 'none',
+          fontSize: 28,
+          boxShadow: shadow.elevated,
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50,
+        }}
+      >+</button>
+
+      {/* Create Task Modal */}
+      {showCreateForm && <CreateTaskForm onClose={() => setShowCreateForm(false)} />}
     </div>
   );
-};
+}

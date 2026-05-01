@@ -1,38 +1,68 @@
-import { useStore } from '../store';
-import type { Task } from '../types';
-import { isOverdue } from '../utils/time';
+import type { Task, Escalation } from '../types';
 
-let pollingInterval: ReturnType<typeof setInterval> | null = null;
+let pollInterval: ReturnType<typeof setInterval> | null = null;
 
-export function startEscalationPolling(intervalMs = 30000) {
-  stopEscalationPolling();
-  pollingInterval = setInterval(() => {
-    const tasks = useStore.getState().tasks;
-    const existing = useStore.getState().escalations;
-    tasks.forEach((task) => {
+export function startEscalationPoll(
+  getTasks: () => Task[],
+  onEscalation: (escalation: Escalation) => void
+): void {
+  if (pollInterval) clearInterval(pollInterval);
+
+  pollInterval = setInterval(() => {
+    const tasks = getTasks();
+    const now = new Date();
+
+    tasks.forEach(task => {
       if (task.status === 'done') return;
-      if (isOverdue(task)) {
-        const alreadyEscalated = existing.some((e) => e.task_id === task.id && !e.resolved);
-        if (!alreadyEscalated) {
-          const minutesOverdue = Math.floor((Date.now() - new Date(task.due_date).getTime()) / 60000);
-          useStore.getState().addEscalation({
-            id: `esc-${task.id}-${Date.now()}`,
-            task_id: task.id,
-            triggered_at: new Date().toISOString(),
-            reason: 'overdue',
-            severity: minutesOverdue > 30 ? 'critical' : 'warning',
-            resolved: false,
-          });
-        }
+
+      const due = new Date(task.due_date);
+      const slaMs = task.sla_minutes * 60 * 1000;
+      const deadline = due.getTime() - slaMs;
+
+      if (now.getTime() > deadline) {
+        const escalation: Escalation = {
+          id: `esc-${task.id}-${now.getTime()}`,
+          task_id: task.id,
+          triggered_at: now.toISOString(),
+          reason: 'overdue',
+          severity: now.getTime() > due.getTime() ? 'critical' : 'warning',
+          resolved: false,
+        };
+        onEscalation(escalation);
       }
     });
-  }, intervalMs);
+  }, 30000); // Poll every 30 seconds
 }
 
-export function stopEscalationPolling() {
-  if (pollingInterval) { clearInterval(pollingInterval); pollingInterval = null; }
+export function stopEscalationPoll(): void {
+  if (pollInterval) {
+    clearInterval(pollInterval);
+    pollInterval = null;
+  }
 }
 
-export function checkOverdueTasks(): Task[] {
-  return useStore.getState().tasks.filter(isOverdue);
+export function checkOverdueTasks(tasks: Task[]): Escalation[] {
+  const escalations: Escalation[] = [];
+  const now = new Date();
+
+  tasks.forEach(task => {
+    if (task.status === 'done') return;
+
+    const due = new Date(task.due_date);
+    const slaMs = task.sla_minutes * 60 * 1000;
+    const deadline = due.getTime() - slaMs;
+
+    if (now.getTime() > deadline) {
+      escalations.push({
+        id: `esc-${task.id}`,
+        task_id: task.id,
+        triggered_at: now.toISOString(),
+        reason: 'overdue',
+        severity: now.getTime() > due.getTime() ? 'critical' : 'warning',
+        resolved: false,
+      });
+    }
+  });
+
+  return escalations;
 }

@@ -1,96 +1,181 @@
-# Molofu3 Design Specification
+# Molofu3 Design Specification v3.7
 
-## Design System
+## Persona-Driven Architecture
 
-### Color Palette
-- **Primary:** #1A1A2E (Deep Navy) — Headers, primary actions
-- **Secondary:** #16213E (Dark Blue) — Secondary backgrounds
-- **Accent:** #E94560 (Coral Red) — Alerts, escalation, CTAs
-- **Success:** #00B894 (Mint Green) — Completed tasks, confirmations
-- **Warning:** #FDCB6E (Amber) — Pending, warnings
-- **Danger:** #D63031 (Red) — Overdue, escalation banners
-- **Info:** #0984E3 (Blue) — Info badges, helper status
-- **Surface:** #FFFFFF (White) — Cards, content areas
-- **Background:** #F8F9FA (Light Gray) — Page backgrounds
-- **Text Primary:** #2D3436 (Charcoal) — Headings, body text
-- **Text Secondary:** #636E72 (Gray) — Subtitles, metadata
-- **Text Inverse:** #FFFFFF — Text on dark backgrounds
+### Persona 1: Sarah Chen (Commander)
+**Who:** 38, marketing director, primary parent
+**Context:** Office during day, commuting, home evenings
+**Constraints:** 30 seconds max per interaction during work, one-hand operation, can't type long messages
+**Goal:** Assign tasks and monitor progress without disrupting work
+**Success:** Creates a task in ≤30 seconds, sees all tasks at a glance
+**Failure:** Can't find task creation, abandons and calls helper on WhatsApp
 
-### Typography
-- **Headings:** -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif
-- **Body:** Same system font stack
-- **Scale:** 32px (h1), 24px (h2), 20px (h3), 16px (body), 14px (small), 12px (caption)
+### Persona 2: Maria Santos (Helper)
+**Who:** 45, domestic helper from Philippines
+**Context:** Markets, school runs, home, often with wet/dirty hands
+**Constraints:** Limited English, big fingers, needs large touch targets, no typing preferred
+**Goal:** See what to do next, update status simply
+**Success:** Sees assigned task, taps "Accept", taps "Done" — 2 taps
+**Failure:** Confusing UI, can't read labels, abandons task
 
-### Spacing
-- **Grid:** 8px base unit
-- **Padding:** 8px, 12px, 16px, 24px, 32px
-- **Card Gap:** 16px
-- **Section Gap:** 24px
+### Persona 3: David Chen (Observer)
+**Who:** 40, finance manager, secondary parent
+**Context:** Office, travel, home
+**Constraints:** View-only, needs quick status checks, laptop preferred
+**Goal:** Check family status in one glance
+**Success:** Opens app, sees all kids' status, no action needed
+**Failure:** Can't find info, asks Sarah on WhatsApp
 
-### Component Patterns
-- **Cards:** White background, 8px border-radius, subtle shadow (0 2px 8px rgba(0,0,0,0.08))
-- **Buttons:** 8px border-radius, 12px vertical padding, 24px horizontal padding
-- **Badges:** 16px height, 8px border-radius (pill), 6px vertical padding, 12px horizontal padding
-- **Inputs:** 8px border-radius, 1px border (#DFE6E9), 12px padding
-- **Navigation Bar:** Fixed bottom, 60px height, 5 icons with labels
+## UI Per Persona
 
-### Screen Layouts
+### Commander UI (Full Dashboard)
+- **Header:** "Good morning, Sarah" + date
+- **Stats Row:** 3 cards (Tasks Today, Escalations, Helper Status)
+- **Escalation Banner:** Red banner if any task overdue
+- **Task List:** All tasks with status, assignee, due time
+- **Floating "+" Button:** Create new task
+- **Bottom Nav:** Dashboard, Tasks, Messages, Schedule, Settings
+- **GPS Preview:** Small map showing helper locations
 
-#### Commander Dashboard (Dark Theme)
-- Top: Greeting + date
-- Stats row: 3 cards (Pending, In Progress, Completed) with counts
-- Today's Tasks: Scrollable list with priority indicators
-- Escalation Banner: Red banner if any tasks are overdue
-- GPS Preview: Map snippet showing helper locations
-- Bottom Nav: Dashboard | Tasks | Messages | Schedule | Settings
+### Helper UI (Simplified, Big Buttons)
+- **Header:** Simple greeting + next task
+- **Big Action Card:** Current task with large "Accept"/"Start"/"Done" buttons (44px+ touch targets)
+- **Task List:** Only assigned tasks, chronological
+- **Status Badges:** Simple icons (⏳ pending, 🚗 in transit, ✅ done)
+- **Bottom Nav:** My Tasks, Messages (only 2 items)
+- **No settings, no calendar, no GPS** — keep it simple
 
-#### Task List (Light Theme)
-- Header: "Tasks" with filter chips (All/Pending/Done)
-- Task Cards: Title, assignee, due time, priority badge, status
-- Floating Action Button: Create new task
-- Tap task → Task Detail screen
+### Observer UI (Read-Only)
+- **Header:** "Family Status"
+- **Summary Cards:** Kids' locations, helper status, upcoming events
+- **Timeline:** Chronological feed of completed tasks
+- **Bottom Nav:** Status, Feed (only 2 items)
+- **No action buttons** — everything is view-only
 
-#### Task Detail (Light Theme)
-- Header: Task title + back button
-- Info Grid: Assignee, Due, Priority, Status
-- Status Stepper: Assigned → Accepted → Started → Arrived → Done
-- Action Buttons: Accept, Start, Arrive, Done (based on current status)
-- Message Feed: In-app messages related to this task
-- GPS Log: Location history if task involves transit
+## Color Palette
+- **Primary:** #1E40AF (deep blue — trust, reliability)
+- **Secondary:** #10B981 (green — success, done)
+- **Alert:** #EF4444 (red — escalation, overdue)
+- **Warning:** #F59E0B (amber — approaching deadline)
+- **Background:** #F8FAFC (light gray)
+- **Card:** #FFFFFF (white)
+- **Text Primary:** #1F2937 (dark gray)
+- **Text Secondary:** #6B7280 (medium gray)
 
-#### Helper Dashboard (Light Theme)
-- Greeting: "Good morning, [Helper Name]"
-- Today's Tasks: Cards with action buttons
-- GPS Status: "Location tracking: ON" indicator
-- Quick Actions: Mark arrived, Message Commander, Emergency
+## Typography
+- **Headings:** System font, 20px bold
+- **Subheadings:** System font, 16px semibold
+- **Body:** System font, 14px regular
+- **Small:** System font, 12px regular (timestamps, labels)
+- **Buttons:** System font, 16px bold, uppercase
 
-#### Messages (Light Theme)
-- Header: "Messages" with search
-- Task-linked conversations: Each task has its own message thread
-- Message bubbles: Left (received), Right (sent)
-- Read receipts: Small checkmarks
-- Input: Text field + send button
+## Spacing Tokens
+- **XS:** 4px (tight spacing)
+- **SM:** 8px (element spacing)
+- **MD:** 16px (section spacing)
+- **LG:** 24px (card spacing)
+- **XL:** 32px (page margins)
 
-#### Schedule (Dark Theme)
-- Week header: Mon-Sun with date
-- Day columns: Events as colored blocks
-- Transport events: Highlighted with vehicle icon
-- Tap day → Day detail view
+## Component Specifications
 
-#### Settings (Dark/Light Theme)
-- Profile section: Name, role, avatar
-- Notification toggles: Push, SMS, Email
-- Escalation config: SLA thresholds
-- Account: Sign out, data export
+### TaskCard
+- **Width:** Full width - 32px padding
+- **Height:** Auto (min 80px)
+- **Border Radius:** 12px
+- **Shadow:** 0 2px 8px rgba(0,0,0,0.1)
+- **Content:** Title (16px bold), Status badge, Assignee, Due time
+- **Status Colors:** pending=amber, accepted=blue, in_progress=blue, arrived=green, done=green
 
-#### Auth Screen (Light Theme)
-- Logo + "Family Command Centre"
-- Email/password fields
-- Login/Sign Up toggle
-- Role selection (Commander/Helper/Observer)
+### NavBar
+- **Height:** 64px
+- **Items:** 5 icons with labels
+- **Active State:** Primary color
+- **Inactive State:** Gray
 
-#### Onboarding (Light Theme)
-- 5-step wizard: Household → Commander → Helper → Children → Confirm
-- Progress indicator at top
-- Next/Back buttons
-- Skip option for non-required steps
+### EscalationBanner
+- **Height:** 48px
+- **Background:** #EF4444
+- **Text:** White, bold
+- **Icon:** ⚠️ warning
+- **Action:** Tap to view details
+
+### CreateTaskForm (Modal)
+- **Fields:** Title (text), Assignee (dropdown), Due (date+time), Priority (auto/manual), Type (dropdown)
+- **Submit:** Full-width button at bottom
+- **Cancel:** Top-right X button
+
+### MessageBubble
+- **Sent:** Primary color background, white text, right-aligned
+- **Received:** White background, dark text, left-aligned
+- **Radius:** 16px (12px on bubble tail side)
+- **Timestamp:** Small gray below bubble
+
+### ScheduleView
+- **Layout:** Weekly grid, 7 columns
+- **Header:** Day names
+- **Cells:** Color-coded blocks for events
+- **Colors:** School=blue, Tuition=purple, Activity=green, Personal=amber
+
+## Screen Specifications
+
+### 1. Auth Screen
+- **Logo:** Molofu3 icon
+- **Title:** "Family Command Centre"
+- **Form:** Email, Password, Role selector (Commander/Helper/Observer)
+- **Actions:** Login, Sign Up
+- **Password:** Min 3 chars, visible
+
+### 2. Onboarding (5 steps)
+- Step 1: Welcome + Commander name
+- Step 2: Helper name + phone
+- Step 3: Children names
+- Step 4: Default pickup/dropoff locations
+- Step 5: Notification preferences
+
+### 3. Commander Dashboard
+- Stats row (3 cards)
+- Escalation banner (conditional)
+- Today's tasks (list)
+- Floating "+" button
+
+### 4. Helper Dashboard
+- Greeting + next task big card
+- Assigned tasks list
+- Simple 2-item nav
+
+### 5. Observer Dashboard
+- Family status summary
+- Activity timeline
+- Simple 2-item nav
+
+### 6. Task Detail
+- Full task info
+- Status stepper
+- Action buttons (persona-dependent)
+- In-task messaging
+
+### 7. Message Feed
+- Task-filtered conversations
+- Message bubbles
+- Read receipts
+
+### 8. Schedule View
+- Weekly calendar
+- Color-coded events
+- Tap to view details
+
+### 9. Settings
+- Notification toggles
+- Escalation thresholds
+- Profile info
+
+## Responsive Breakpoints
+- **Mobile:** < 768px (primary target)
+- **Tablet:** 768px - 1024px
+- **Desktop:** > 1024px (Observer primary)
+
+## Accessibility
+- Minimum touch target: 44x44px
+- Contrast ratio: 4.5:1 minimum
+- Screen reader labels on all interactive elements
+- Focus visible on keyboard navigation
