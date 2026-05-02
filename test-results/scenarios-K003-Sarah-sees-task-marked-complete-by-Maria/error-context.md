@@ -1,0 +1,293 @@
+# Instructions
+
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+
+# Test info
+
+- Name: scenarios.spec.ts >> K003: Sarah sees task marked complete by Maria
+- Location: tests/scenarios.spec.ts:203:1
+
+# Error details
+
+```
+Error: expect(locator).toBeVisible() failed
+
+Locator: locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")').first()
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
+Call log:
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")').first()
+
+```
+
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Good morning, Sarah" [level=1] [ref=e5]
+    - paragraph [ref=e6]: Chen Family
+    - generic [ref=e7]: Commander
+  - generic [ref=e8]:
+    - generic [ref=e10]:
+      - generic [ref=e11]:
+        - generic [ref=e12]: 2/4
+        - generic [ref=e13]: Done today
+      - generic [ref=e14]:
+        - generic [ref=e15]: "2"
+        - generic [ref=e16]: In progress
+      - generic [ref=e17]:
+        - generic [ref=e18]: "1"
+        - generic [ref=e19]: Needs help
+    - generic [ref=e20]:
+      - generic [ref=e21]: Today's Tasks
+      - generic [ref=e22]:
+        - generic [ref=e23] [cursor=pointer]:
+          - generic [ref=e24]:
+            - generic [ref=e26]: Take Lily to piano lesson
+            - generic [ref=e27]: ⚠️ Help
+          - generic [ref=e28]:
+            - generic [ref=e29]: ⏰ 16:00
+            - generic [ref=e30]: 👤 Maria Santos
+          - generic [ref=e31]: 📍 Mrs. Lam Piano Studio, 3/F, 42 Java Rd
+          - generic [ref=e33]:
+            - generic [ref=e34]: "Maria Santos:"
+            - text: Traffic looks bad — may be 10 min late. Is that OK?
+        - generic [ref=e35] [cursor=pointer]:
+          - generic [ref=e36]:
+            - generic [ref=e38]: Pick up Tim from basketball
+            - generic [ref=e39]: ○ Pending
+          - generic [ref=e40]:
+            - generic [ref=e41]: ⏰ 17:00
+            - generic [ref=e42]: 👤 Maria Santos
+          - generic [ref=e43]: 📍 Kowloon Cricket Club, Gate B
+        - generic [ref=e44] [cursor=pointer]:
+          - generic [ref=e45]:
+            - generic [ref=e47]: Buy groceries for dinner
+            - generic [ref=e48]: ✓ Done
+          - generic [ref=e49]:
+            - generic [ref=e50]: ⏰ 09:00
+            - generic [ref=e51]: 👤 Maria Santos
+          - generic [ref=e52]: 📍 Kowloon Wet Market
+        - generic [ref=e53] [cursor=pointer]:
+          - generic [ref=e54]:
+            - generic [ref=e56]: Wake kids for school
+            - generic [ref=e57]: ✓ Done
+          - generic [ref=e58]:
+            - generic [ref=e59]: ⏰ 07:00
+            - generic [ref=e60]: 👤 Maria Santos
+          - generic [ref=e61]: 📍 Home
+  - button "+" [ref=e62] [cursor=pointer]
+```
+
+# Test source
+
+```ts
+  112 | });
+  113 | 
+  114 | test('V007: Single-day view — no week/date navigation exists', async ({ page }) => {
+  115 |   await go(page, '/helper');
+  116 |   const navButtons = page.locator('button:has-text("Yesterday"), button:has-text("Tomorrow"), button:has-text("Week"), button:has-text("Next day"), button:has-text("Prev")');
+  117 |   const navCount = await navButtons.count();
+  118 |   expect(navCount).toBe(0);
+  119 | });
+  120 | 
+  121 | // ─── CATEGORY: Notes ─────────────────────────────────────────
+  122 | test('N001: Maria adds a note to piano lesson task', async ({ page }) => {
+  123 |   await go(page, '/helper');
+  124 |   // Click the piano task card specifically
+  125 |   await page.locator('.task-card:has-text("Piano")').click();
+  126 |   await page.waitForLoadState('networkidle');
+  127 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
+  128 |   await noteInput.fill('N001_note_test_' + Date.now());
+  129 |   await page.click('.note-send-btn');
+  130 |   await page.waitForTimeout(300);
+  131 |   await expect(page.locator('.task-note').first()).toBeVisible();
+  132 | });
+  133 | 
+  134 | test('N002: Sarah reads a note left by Maria on piano task', async ({ page }) => {
+  135 |   // First: Maria adds a note
+  136 |   await go(page, '/helper');
+  137 |   await page.locator('.task-card:has-text("Piano")').click();
+  138 |   await page.waitForLoadState('networkidle');
+  139 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
+  140 |   const noteText = 'N002_read_note_' + Date.now();
+  141 |   await noteInput.fill(noteText);
+  142 |   await page.click('.note-send-btn');
+  143 |   await page.waitForTimeout(300);
+  144 |   // Navigate to Sarah
+  145 |   await go(page, '/commander');
+  146 |   await page.locator('.task-card:has-text("Piano")').click();
+  147 |   await page.waitForLoadState('networkidle');
+  148 |   await expect(page.locator('.task-note').first()).toContainText('N002_read_note');
+  149 | });
+  150 | 
+  151 | test('N003: [BUG CONFIRMED] Sarah cannot add a note — input gated to helper only', async ({ page }) => {
+  152 |   await go(page, '/commander');
+  153 |   await page.locator('.task-card').first().click();
+  154 |   await page.waitForLoadState('networkidle');
+  155 |   const noteInputWrap = page.locator('.note-input-wrap');
+  156 |   // BUG CONFIRMED: Sarah has no note input
+  157 |   await expect(noteInputWrap).toHaveCount(0);
+  158 | });
+  159 | 
+  160 | test('N004: Multiple notes visible in thread on piano task', async ({ page }) => {
+  161 |   await go(page, '/helper');
+  162 |   await page.locator('.task-card:has-text("Piano")').click();
+  163 |   await page.waitForLoadState('networkidle');
+  164 |   const notes = page.locator('.task-note');
+  165 |   const count = await notes.count();
+  166 |   // Piano already has a note in mock data + our N001 added another
+  167 |   expect(count).toBeGreaterThanOrEqual(1);
+  168 | });
+  169 | 
+  170 | test('N005: Observer can see tasks', async ({ page }) => {
+  171 |   await go(page, '/observer');
+  172 |   const observerTaskRows = page.locator('.observer-task-row');
+  173 |   const count = await observerTaskRows.count();
+  174 |   expect(count).toBeGreaterThanOrEqual(1);
+  175 | });
+  176 | 
+  177 | // ─── CATEGORY: Task Completion ────────────────────────────────
+  178 | test('K001: Maria quick-completes a task via Quick Complete', async ({ page }) => {
+  179 |   await go(page, '/helper');
+  180 |   // Use basketball task — hasn't been touched yet
+  181 |   const basketballBtn = page.locator('.quick-action-btn:has-text("basketball")');
+  182 |   await basketballBtn.click();
+  183 |   await page.waitForTimeout(500);
+  184 |   // Button should disappear (task completed)
+  185 |   await expect(basketballBtn).not.toBeVisible();
+  186 | });
+  187 | 
+  188 | test('K002: Maria completes task via detail view with note', async ({ page }) => {
+  189 |   await go(page, '/helper');
+  190 |   // Click piano task
+  191 |   await page.locator('.task-card:has-text("Piano")').click();
+  192 |   await page.waitForLoadState('networkidle');
+  193 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
+  194 |   await noteInput.fill('K002_completion_note');
+  195 |   await page.click('.note-send-btn');
+  196 |   await page.waitForTimeout(200);
+  197 |   await page.click('.complete-btn');
+  198 |   await page.waitForTimeout(300);
+  199 |   // Should navigate back to dashboard
+  200 |   await expect(page).not.toHaveURL(/\/task\//);
+  201 | });
+  202 | 
+  203 | test('K003: Sarah sees task marked complete by Maria', async ({ page }) => {
+  204 |   // First complete basketball as Maria
+  205 |   await go(page, '/helper');
+  206 |   await page.locator('.quick-action-btn:has-text("basketball")').click();
+  207 |   await page.waitForTimeout(500);
+  208 |   // Now switch to Sarah
+  209 |   await go(page, '/commander');
+  210 |   // Basketball should show completed badge
+  211 |   const completedBadge = page.locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")');
+> 212 |   await expect(completedBadge.first()).toBeVisible();
+      |                                        ^ Error: expect(locator).toBeVisible() failed
+  213 | });
+  214 | 
+  215 | test('K004: [BUG] Sarah cannot see notes on tasks she views', async ({ page }) => {
+  216 |   // Maria adds a note to piano task
+  217 |   await go(page, '/helper');
+  218 |   await page.locator('.task-card:has-text("Piano")').click();
+  219 |   await page.waitForLoadState('networkidle');
+  220 |   await page.locator('input[placeholder*="Ask a question"]').fill('K004_sarah_read_test');
+  221 |   await page.click('.note-send-btn');
+  222 |   await page.waitForTimeout(200);
+  223 |   await page.click('.complete-btn');
+  224 |   await page.waitForTimeout(300);
+  225 |   // Sarah tries to see the note
+  226 |   await go(page, '/commander');
+  227 |   await page.locator('.task-card:has-text("Piano")').click();
+  228 |   await page.waitForLoadState('networkidle');
+  229 |   // BUG: Sarah can see existing notes in the thread (from mock data) but the note she left as K002 won't be visible
+  230 |   // The task is now completed so she sees it... but the key bug is N003
+  231 |   await expect(page.locator('.task-note').first()).toBeVisible();
+  232 | });
+  233 | 
+  234 | test('K005: Task detail → mark complete → navigates back', async ({ page }) => {
+  235 |   await go(page, '/helper');
+  236 |   await page.locator('.task-card').first().click();
+  237 |   await page.waitForLoadState('networkidle');
+  238 |   await page.click('.complete-btn');
+  239 |   await page.waitForTimeout(500);
+  240 |   await expect(page).not.toHaveURL(/\/task\//);
+  241 | });
+  242 | 
+  243 | // ─── CATEGORY: Needs Help ─────────────────────────────────────
+  244 | test('H001: [GAP] Maria has NO UI to mark task as needs_help', async ({ page }) => {
+  245 |   await go(page, '/helper');
+  246 |   await page.locator('.task-card').first().click();
+  247 |   await page.waitForLoadState('networkidle');
+  248 |   const needsHelpBtn = page.locator('button:has-text("Needs Help"), button:has-text("⚠️ Help"), button:has-text("Mark as needs help")');
+  249 |   await expect(needsHelpBtn).toHaveCount(0);
+  250 | });
+  251 | 
+  252 | test('H002: Sarah sees needs_help count > 0 in dashboard stats', async ({ page }) => {
+  253 |   await go(page, '/commander');
+  254 |   // Needs help stat is the 3rd stat card
+  255 |   const statNums = await page.locator('.stat-num').allTextContents();
+  256 |   expect(parseInt(statNums[2])).toBeGreaterThanOrEqual(1);
+  257 | });
+  258 | 
+  259 | test('H003: t4 Piano lesson shows ⚠️ Needs help badge', async ({ page }) => {
+  260 |   await go(page, '/commander');
+  261 |   await expect(page.locator('.status-badge:has-text("⚠️ Help")').first()).toBeVisible();
+  262 | });
+  263 | 
+  264 | // ─── CATEGORY: Week View / Calendar ───────────────────────────
+  265 | test('W001: [GAP] Commander has NO week view / calendar strip', async ({ page }) => {
+  266 |   await go(page, '/commander');
+  267 |   const weekNav = page.locator('.week-strip, .calendar-nav, .date-picker, [class*="calendar"]');
+  268 |   await expect(weekNav).toHaveCount(0);
+  269 | });
+  270 | 
+  271 | test('W002: [GAP] Cannot create task for tomorrow via UI (no date picker)', async ({ page }) => {
+  272 |   await go(page, '/commander');
+  273 |   await page.click('.fab');
+  274 |   const datePicker = page.locator('input[type="date"]');
+  275 |   await expect(datePicker).toHaveCount(0);
+  276 | });
+  277 | 
+  278 | test('W003: [GAP] No conflict detection for overlapping times', async ({ page }) => {
+  279 |   await go(page, '/commander');
+  280 |   await page.click('.fab');
+  281 |   await page.fill('input[placeholder*="Pick up Tim"]', 'W003_conflict_1');
+  282 |   await page.fill('input[type="time"]', '16:00');
+  283 |   await page.click('button[type="submit"]');
+  284 |   await page.waitForTimeout(300);
+  285 |   await page.click('.fab');
+  286 |   await page.fill('input[placeholder*="Pick up Tim"]', 'W003_conflict_2');
+  287 |   await page.fill('input[type="time"]', '16:00');
+  288 |   await page.click('button[type="submit"]');
+  289 |   await page.waitForTimeout(300);
+  290 |   const warning = page.locator('.conflict-warning, [class*="conflict"], .alert-warning:has-text("conflict")');
+  291 |   await expect(warning).toHaveCount(0);
+  292 | });
+  293 | 
+  294 | // ─── CATEGORY: GPS / Location ─────────────────────────────────
+  295 | test('G001: Commander enters location as free text', async ({ page }) => {
+  296 |   await go(page, '/commander');
+  297 |   await page.click('.fab');
+  298 |   const unique = 'G001_loc_test_' + Date.now();
+  299 |   await page.fill('input[placeholder*="Pick up Tim"]', unique);
+  300 |   await page.fill('input[placeholder*="Kowloon Cricket"]', 'G001 Test Location');
+  301 |   await page.click('button[type="submit"]');
+  302 |   await page.waitForTimeout(300);
+  303 |   await expect(page.getByText(unique)).toBeVisible();
+  304 | });
+  305 | 
+  306 | test('G002: [GAP] NO GPS auto-detect button in location field', async ({ page }) => {
+  307 |   await go(page, '/commander');
+  308 |   await page.click('.fab');
+  309 |   const gpsBtn = page.locator('button[aria-label*="location"], button:has-text("📍"), button:has-text("GPS"), button:has-text("Detect"), button:has-text("Current location")');
+  310 |   await expect(gpsBtn).toHaveCount(0);
+  311 | });
+  312 | 
+```

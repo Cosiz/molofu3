@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
 
 export function CommanderDashboard() {
-  const { setUser, todaysTasks, addTask } = useStore();
+  const { setUser, todaysTasks, tasksForDate, addTask } = useStore();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
   const [title, setTitle] = useState('');
@@ -11,10 +11,39 @@ export function CommanderDashboard() {
   const [assignee, setAssignee] = useState('u2');
   const [dueTime, setDueTime] = useState('17:00');
   const [location, setLocation] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
   useEffect(() => { setUser({ id: 'u1', name: 'Sarah Chen', role: 'commander' }); }, []);
 
-  const tasks = todaysTasks();
+  const today = new Date().toISOString().split('T')[0];
+  const tasks = selectedDate === today ? todaysTasks() : tasksForDate(selectedDate);
+
+  // Build 7-day strip starting from Sunday of current week
+  const currentSunday = new Date();
+  currentSunday.setDate(currentSunday.getDate() - currentSunday.getDay());
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(currentSunday);
+    d.setDate(d.getDate() + i);
+    return d.toISOString().split('T')[0];
+  });
+
+  function prevWeek() {
+    const s = new Date(currentSunday);
+    s.setDate(s.getDate() - 7);
+    setSelectedDate(s.toISOString().split('T')[0]);
+  }
+  function nextWeek() {
+    const s = new Date(currentSunday);
+    s.setDate(s.getDate() + 7);
+    setSelectedDate(s.toISOString().split('T')[0]);
+  }
+
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  function formatDayLabel(d: string) {
+    const date = new Date(d);
+    return { label: dayLabels[date.getDay()], num: date.getDate() };
+  }
+
   const completed = tasks.filter((t) => t.status === 'completed').length;
   const needsHelp = tasks.filter((t) => t.status === 'needs_help').length;
   const pending = tasks.filter((t) => t.status !== 'completed').length;
@@ -33,7 +62,7 @@ export function CommanderDashboard() {
       assigneeId: assignee,
       assigneeName: assignee === 'u2' ? 'Maria Santos' : 'David Chen',
       dueTime,
-      dueDate: new Date().toISOString().split('T')[0],
+      dueDate: selectedDate,
       location,
       contact: '',
       status: 'pending',
@@ -51,6 +80,34 @@ export function CommanderDashboard() {
         <div className="badge">Commander</div>
       </div>
       <div className="dash-body">
+        <div className="dash-card">
+          <div className="week-strip">
+            <button className="week-nav-btn" onClick={prevWeek}>‹</button>
+            {weekDays.map((d) => {
+              const { label, num } = formatDayLabel(d);
+              const isSelected = d === selectedDate;
+              const isToday = d === today;
+              return (
+                <button
+                  key={d}
+                  className={`week-day ${isSelected ? 'week-day-selected' : ''} ${isToday ? 'week-day-today' : ''}`}
+                  onClick={() => setSelectedDate(d)}
+                >
+                  <span className="week-day-label">{label}</span>
+                  <span className="week-day-num">{num}</span>
+                </button>
+              );
+            })}
+            <button className="week-nav-btn" onClick={nextWeek}>›</button>
+          </div>
+        </div>
+
+        <div className="dash-card">
+          <div className="gps-banner">
+            📍 GPS tracking — <span className="gps-coming-soon">coming soon</span>
+          </div>
+        </div>
+
         <div className="dash-card">
           <div className="stat-row">
             <div className="stat-card">

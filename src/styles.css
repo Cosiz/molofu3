@@ -279,6 +279,79 @@ body {
 .msg-input { flex: 1; padding: 8px 10px; border: 1.5px solid #BFDBFE; border-radius: 8px; font-size: 13px; }
 .msg-send { padding: 8px 14px; background: var(--info); color: white; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
+/* ── Week Strip ── */
+.week-strip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 0;
+}
+.week-nav-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: var(--text-sec);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.week-day {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 2px;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.week-day-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.week-day-num {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-sec);
+}
+.week-day-selected {
+  background: var(--primary);
+  border-radius: 8px;
+}
+.week-day-selected .week-day-label,
+.week-day-selected .week-day-num {
+  color: white;
+}
+.week-day-today:not(.week-day-selected) {
+  background: #FEE2E2;
+  border-radius: 8px;
+}
+.week-day-today:not(.week-day-selected) .week-day-num {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+/* ── GPS Banner ── */
+.gps-banner {
+  font-size: 13px;
+  color: var(--text-sec);
+  padding: 8px 0;
+}
+.gps-coming-soon {
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* ── Animation ── */
 @keyframes slideUp { from { transform: translateY(40px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .modal { animation: slideUp 0.22s ease; }

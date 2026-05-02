@@ -89,7 +89,7 @@ export function TaskDetail() {
           </div>
         )}
 
-        {isHelper && task.status !== 'completed' && (
+        {!isObserver && task.status !== 'completed' && (
           <>
             <button className="complete-btn" onClick={handleComplete}>
               ✓ Mark as Complete

@@ -95,6 +95,8 @@ interface Store {
   addNote: (taskId: string, content: string) => void;
   myTasks: () => Task[];
   todaysTasks: () => Task[];
+  tasksForDate: (date: string) => Task[];
+  tasksForWeek: (startDate: string) => Task[];
 }
 
 export const useStore = create<Store>((set, get) => ({
@@ -165,5 +167,17 @@ export const useStore = create<Store>((set, get) => ({
   todaysTasks: () => {
     const today = new Date().toISOString().split('T')[0];
     return get().tasks.filter((t) => t.dueDate === today);
+  },
+
+  tasksForDate: (date: string) => {
+    return get().tasks.filter((t) => t.dueDate === date);
+  },
+
+  tasksForWeek: (startDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    const endStr = end.toISOString().split('T')[0];
+    return get().tasks.filter((t) => t.dueDate >= startDate && t.dueDate < endStr);
   },
 }));
