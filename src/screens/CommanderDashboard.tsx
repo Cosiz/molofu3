@@ -13,29 +13,43 @@ export function CommanderDashboard() {
   const [location, setLocation] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
+  // weekStart stored in state so prev/next navigate correctly
+  const [weekStart, setWeekStart] = useState(() => {
+    const s = new Date();
+    s.setDate(s.getDate() - s.getDay());
+    return s.toISOString().split('T')[0];
+  });
+
   useEffect(() => { setUser({ id: 'u1', name: 'Sarah Chen', role: 'commander' }); }, []);
 
   const today = new Date().toISOString().split('T')[0];
   const tasks = selectedDate === today ? todaysTasks() : tasksForDate(selectedDate);
 
-  // Build 7-day strip starting from Sunday of current week
-  const currentSunday = new Date();
-  currentSunday.setDate(currentSunday.getDate() - currentSunday.getDay());
+  // Build 7-day strip from weekStart
   const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(currentSunday);
+    const d = new Date(weekStart);
     d.setDate(d.getDate() + i);
     return d.toISOString().split('T')[0];
   });
 
   function prevWeek() {
-    const s = new Date(currentSunday);
+    const s = new Date(weekStart);
     s.setDate(s.getDate() - 7);
+    setWeekStart(s.toISOString().split('T')[0]);
     setSelectedDate(s.toISOString().split('T')[0]);
   }
   function nextWeek() {
-    const s = new Date(currentSunday);
+    const s = new Date(weekStart);
     s.setDate(s.getDate() + 7);
+    setWeekStart(s.toISOString().split('T')[0]);
     setSelectedDate(s.toISOString().split('T')[0]);
+  }
+  function selectDay(d: string) {
+    setSelectedDate(d);
+    // Snap weekStart to the week containing the selected day
+    const sd = new Date(d);
+    sd.setDate(sd.getDate() - sd.getDay());
+    setWeekStart(sd.toISOString().split('T')[0]);
   }
 
   const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -91,7 +105,7 @@ export function CommanderDashboard() {
                 <button
                   key={d}
                   className={`week-day ${isSelected ? 'week-day-selected' : ''} ${isToday ? 'week-day-today' : ''}`}
-                  onClick={() => setSelectedDate(d)}
+                  onClick={() => selectDay(d)}
                 >
                   <span className="week-day-label">{label}</span>
                   <span className="week-day-num">{num}</span>

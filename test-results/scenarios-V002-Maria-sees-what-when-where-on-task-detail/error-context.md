@@ -6,25 +6,68 @@
 
 # Test info
 
-- Name: scenarios.spec.ts >> N002: Sarah reads a note left by Maria on piano task
-- Location: tests/scenarios.spec.ts:134:1
+- Name: scenarios.spec.ts >> V002: Maria sees what/when/where on task detail
+- Location: tests/scenarios.spec.ts:77:1
 
 # Error details
 
 ```
-Test timeout of 15000ms exceeded.
-```
+Error: expect(locator).toBeVisible() failed
 
-```
-Error: locator.fill: Test timeout of 15000ms exceeded.
+Locator: locator('.detail-label:has-text("When")')
+Expected: visible
+Timeout: 5000ms
+Error: element(s) not found
+
 Call log:
-  - waiting for locator('input[placeholder*="Ask a question"]')
+  - Expect "toBeVisible" with timeout 5000ms
+  - waiting for locator('.detail-label:has-text("When")')
 
 ```
 
 # Test source
 
 ```ts
+  1   | import { test, expect, Page } from '@playwright/test';
+  2   | 
+  3   | const BASE = 'http://localhost:5173';
+  4   | 
+  5   | // ─── Fresh page helper ────────────────────────────────────────
+  6   | async function freshPage(page: Page) {
+  7   |   // Already using 1 worker — use new context per test
+  8   | }
+  9   | 
+  10  | // ─── Route helper ─────────────────────────────────────────────
+  11  | async function go(page: Page, path: string) {
+  12  |   await page.goto(BASE + path);
+  13  |   await page.waitForLoadState('networkidle');
+  14  | }
+  15  | 
+  16  | // ─── CATEGORY: Create Task ───────────────────────────────────
+  17  | test('C001: Sarah creates task via + button — happy path', async ({ page }) => {
+  18  |   await go(page, '/commander');
+  19  |   await expect(page.locator('h1')).toContainText('Good morning, Sarah');
+  20  |   await page.click('.fab');
+  21  |   await expect(page.locator('.modal h2')).toContainText('New Task');
+  22  |   // Use unique title to avoid state pollution
+  23  |   await page.fill('input[placeholder*="Pick up Tim"]', 'CT1_create_task_playwright_' + Date.now());
+  24  |   await page.selectOption('select', 'u2');
+  25  |   await page.fill('input[type="time"]', '16:00');
+  26  |   await page.click('button[type="submit"]');
+  27  |   await page.waitForTimeout(300);
+  28  |   await expect(page.locator('.task-title').first()).toContainText('CT1_create_task');
+  29  | });
+  30  | 
+  31  | test('C002: Task creation with description and location', async ({ page }) => {
+  32  |   await go(page, '/commander');
+  33  |   await page.click('.fab');
+  34  |   const unique = 'CT2_desc_loc_' + Date.now();
+  35  |   await page.fill('input[placeholder*="Pick up Tim"]', unique);
+  36  |   await page.fill('textarea[placeholder*="Gate B"]', 'Test description');
+  37  |   await page.fill('input[placeholder*="Kowloon Cricket"]', 'Test Location XYZ');
+  38  |   await page.click('button[type="submit"]');
+  39  |   await page.waitForTimeout(300);
+  40  |   // Task visible in list
   41  |   await expect(page.getByText(unique)).toBeVisible();
   42  | });
   43  | 
@@ -68,7 +111,8 @@ Call log:
   81  |   await page.waitForLoadState('networkidle');
   82  |   // Check time field is visible in detail view
   83  |   const timeLabel = page.locator('.detail-label:has-text("When")');
-  84  |   await expect(timeLabel).toBeVisible();
+> 84  |   await expect(timeLabel).toBeVisible();
+      |                           ^ Error: expect(locator).toBeVisible() failed
   85  | });
   86  | 
   87  | test('V003: Helper view — no keyboard required to review tasks', async ({ page }) => {
@@ -125,8 +169,7 @@ Call log:
   138 |   await page.waitForLoadState('networkidle');
   139 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
   140 |   const noteText = 'N002_read_note_' + Date.now();
-> 141 |   await noteInput.fill(noteText);
-      |                   ^ Error: locator.fill: Test timeout of 15000ms exceeded.
+  141 |   await noteInput.fill(noteText);
   142 |   await page.click('.note-send-btn');
   143 |   await page.waitForTimeout(300);
   144 |   // Navigate to Sarah
@@ -170,61 +213,4 @@ Call log:
   182 |   await basketballBtn.click();
   183 |   await page.waitForTimeout(500);
   184 |   // Button should disappear (task completed)
-  185 |   await expect(basketballBtn).not.toBeVisible();
-  186 | });
-  187 | 
-  188 | test('K002: Maria completes task via detail view with note', async ({ page }) => {
-  189 |   await go(page, '/helper');
-  190 |   // Click piano task
-  191 |   await page.locator('.task-card:has-text("Piano")').click();
-  192 |   await page.waitForLoadState('networkidle');
-  193 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
-  194 |   await noteInput.fill('K002_completion_note');
-  195 |   await page.click('.note-send-btn');
-  196 |   await page.waitForTimeout(200);
-  197 |   await page.click('.complete-btn');
-  198 |   await page.waitForTimeout(300);
-  199 |   // Should navigate back to dashboard
-  200 |   await expect(page).not.toHaveURL(/\/task\//);
-  201 | });
-  202 | 
-  203 | test('K003: Sarah sees task marked complete by Maria', async ({ page }) => {
-  204 |   // First complete basketball as Maria
-  205 |   await go(page, '/helper');
-  206 |   await page.locator('.quick-action-btn:has-text("basketball")').click();
-  207 |   await page.waitForTimeout(500);
-  208 |   // Now switch to Sarah
-  209 |   await go(page, '/commander');
-  210 |   // Basketball should show completed badge
-  211 |   const completedBadge = page.locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")');
-  212 |   await expect(completedBadge.first()).toBeVisible();
-  213 | });
-  214 | 
-  215 | test('K004: [BUG] Sarah cannot see notes on tasks she views', async ({ page }) => {
-  216 |   // Maria adds a note to piano task
-  217 |   await go(page, '/helper');
-  218 |   await page.locator('.task-card:has-text("Piano")').click();
-  219 |   await page.waitForLoadState('networkidle');
-  220 |   await page.locator('input[placeholder*="Ask a question"]').fill('K004_sarah_read_test');
-  221 |   await page.click('.note-send-btn');
-  222 |   await page.waitForTimeout(200);
-  223 |   await page.click('.complete-btn');
-  224 |   await page.waitForTimeout(300);
-  225 |   // Sarah tries to see the note
-  226 |   await go(page, '/commander');
-  227 |   await page.locator('.task-card:has-text("Piano")').click();
-  228 |   await page.waitForLoadState('networkidle');
-  229 |   // BUG: Sarah can see existing notes in the thread (from mock data) but the note she left as K002 won't be visible
-  230 |   // The task is now completed so she sees it... but the key bug is N003
-  231 |   await expect(page.locator('.task-note').first()).toBeVisible();
-  232 | });
-  233 | 
-  234 | test('K005: Task detail → mark complete → navigates back', async ({ page }) => {
-  235 |   await go(page, '/helper');
-  236 |   await page.locator('.task-card').first().click();
-  237 |   await page.waitForLoadState('networkidle');
-  238 |   await page.click('.complete-btn');
-  239 |   await page.waitForTimeout(500);
-  240 |   await expect(page).not.toHaveURL(/\/task\//);
-  241 | });
 ```

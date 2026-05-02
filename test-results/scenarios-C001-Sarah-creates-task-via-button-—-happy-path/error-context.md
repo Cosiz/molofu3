@@ -37,61 +37,86 @@ Call log:
     - generic [ref=e7]: Commander
   - generic [ref=e8]:
     - generic [ref=e10]:
-      - generic [ref=e11]:
-        - generic [ref=e12]: 2/5
-        - generic [ref=e13]: Done today
-      - generic [ref=e14]:
-        - generic [ref=e15]: "3"
-        - generic [ref=e16]: In progress
-      - generic [ref=e17]:
-        - generic [ref=e18]: "1"
-        - generic [ref=e19]: Needs help
-    - generic [ref=e20]:
-      - generic [ref=e21]: Today's Tasks
-      - generic [ref=e22]:
-        - generic [ref=e23] [cursor=pointer]:
-          - generic [ref=e24]:
-            - generic [ref=e26]: Take Lily to piano lesson
-            - generic [ref=e27]: ⚠️ Help
-          - generic [ref=e28]:
-            - generic [ref=e29]: ⏰ 16:00
-            - generic [ref=e30]: 👤 Maria Santos
-          - generic [ref=e31]: 📍 Mrs. Lam Piano Studio, 3/F, 42 Java Rd
-          - generic [ref=e33]:
-            - generic [ref=e34]: "Maria Santos:"
+      - button "‹" [ref=e11] [cursor=pointer]
+      - button "Sun 26" [ref=e12] [cursor=pointer]:
+        - generic [ref=e13]: Sun
+        - generic [ref=e14]: "26"
+      - button "Mon 27" [ref=e15] [cursor=pointer]:
+        - generic [ref=e16]: Mon
+        - generic [ref=e17]: "27"
+      - button "Tue 28" [ref=e18] [cursor=pointer]:
+        - generic [ref=e19]: Tue
+        - generic [ref=e20]: "28"
+      - button "Wed 29" [ref=e21] [cursor=pointer]:
+        - generic [ref=e22]: Wed
+        - generic [ref=e23]: "29"
+      - button "Thu 30" [ref=e24] [cursor=pointer]:
+        - generic [ref=e25]: Thu
+        - generic [ref=e26]: "30"
+      - button "Fri 1" [ref=e27] [cursor=pointer]:
+        - generic [ref=e28]: Fri
+        - generic [ref=e29]: "1"
+      - button "Sat 2" [ref=e30] [cursor=pointer]:
+        - generic [ref=e31]: Sat
+        - generic [ref=e32]: "2"
+      - button "›" [ref=e33] [cursor=pointer]
+    - generic [ref=e35]: 📍 GPS tracking — coming soon
+    - generic [ref=e37]:
+      - generic [ref=e38]:
+        - generic [ref=e39]: 2/5
+        - generic [ref=e40]: Done today
+      - generic [ref=e41]:
+        - generic [ref=e42]: "3"
+        - generic [ref=e43]: In progress
+      - generic [ref=e44]:
+        - generic [ref=e45]: "1"
+        - generic [ref=e46]: Needs help
+    - generic [ref=e47]:
+      - generic [ref=e48]: Today's Tasks
+      - generic [ref=e49]:
+        - generic [ref=e50] [cursor=pointer]:
+          - generic [ref=e51]:
+            - generic [ref=e53]: Take Lily to piano lesson
+            - generic [ref=e54]: ⚠️ Help
+          - generic [ref=e55]:
+            - generic [ref=e56]: ⏰ 16:00
+            - generic [ref=e57]: 👤 Maria Santos
+          - generic [ref=e58]: 📍 Mrs. Lam Piano Studio, 3/F, 42 Java Rd
+          - generic [ref=e60]:
+            - generic [ref=e61]: "Maria Santos:"
             - text: Traffic looks bad — may be 10 min late. Is that OK?
-        - generic [ref=e35] [cursor=pointer]:
-          - generic [ref=e36]:
-            - generic [ref=e38]: Pick up Tim from basketball
-            - generic [ref=e39]: ○ Pending
-          - generic [ref=e40]:
-            - generic [ref=e41]: ⏰ 17:00
-            - generic [ref=e42]: 👤 Maria Santos
-          - generic [ref=e43]: 📍 Kowloon Cricket Club, Gate B
-        - generic [ref=e44] [cursor=pointer]:
-          - generic [ref=e45]:
-            - generic [ref=e47]: CT1_create_task_playwright_1777710846829
-            - generic [ref=e48]: ○ Pending
-          - generic [ref=e49]:
-            - generic [ref=e50]: ⏰ 16:00
-            - generic [ref=e51]: 👤 Maria Santos
-        - generic [ref=e52] [cursor=pointer]:
-          - generic [ref=e53]:
-            - generic [ref=e55]: Buy groceries for dinner
-            - generic [ref=e56]: ✓ Done
-          - generic [ref=e57]:
-            - generic [ref=e58]: ⏰ 09:00
-            - generic [ref=e59]: 👤 Maria Santos
-          - generic [ref=e60]: 📍 Kowloon Wet Market
-        - generic [ref=e61] [cursor=pointer]:
-          - generic [ref=e62]:
-            - generic [ref=e64]: Wake kids for school
-            - generic [ref=e65]: ✓ Done
-          - generic [ref=e66]:
-            - generic [ref=e67]: ⏰ 07:00
-            - generic [ref=e68]: 👤 Maria Santos
-          - generic [ref=e69]: 📍 Home
-  - button "+" [ref=e70] [cursor=pointer]
+        - generic [ref=e62] [cursor=pointer]:
+          - generic [ref=e63]:
+            - generic [ref=e65]: Pick up Tim from basketball
+            - generic [ref=e66]: ○ Pending
+          - generic [ref=e67]:
+            - generic [ref=e68]: ⏰ 17:00
+            - generic [ref=e69]: 👤 Maria Santos
+          - generic [ref=e70]: 📍 Kowloon Cricket Club, Gate B
+        - generic [ref=e71] [cursor=pointer]:
+          - generic [ref=e72]:
+            - generic [ref=e74]: CT1_create_task_playwright_1777714048255
+            - generic [ref=e75]: ○ Pending
+          - generic [ref=e76]:
+            - generic [ref=e77]: ⏰ 16:00
+            - generic [ref=e78]: 👤 Maria Santos
+        - generic [ref=e79] [cursor=pointer]:
+          - generic [ref=e80]:
+            - generic [ref=e82]: Buy groceries for dinner
+            - generic [ref=e83]: ✓ Done
+          - generic [ref=e84]:
+            - generic [ref=e85]: ⏰ 09:00
+            - generic [ref=e86]: 👤 Maria Santos
+          - generic [ref=e87]: 📍 Kowloon Wet Market
+        - generic [ref=e88] [cursor=pointer]:
+          - generic [ref=e89]:
+            - generic [ref=e91]: Wake kids for school
+            - generic [ref=e92]: ✓ Done
+          - generic [ref=e93]:
+            - generic [ref=e94]: ⏰ 07:00
+            - generic [ref=e95]: 👤 Maria Santos
+          - generic [ref=e96]: 📍 Home
+  - button "+" [ref=e97] [cursor=pointer]
 ```
 
 # Test source

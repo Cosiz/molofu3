@@ -12,6 +12,7 @@ export function TaskDetail() {
   if (!task) return null;
 
   const isHelper = useStore.getState().currentUser?.role === 'helper';
+  const isObserver = useStore.getState().currentUser?.role === 'observer';
 
   const statusLabels: Record<string, string> = {
     pending: '○ Pending',

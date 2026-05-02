@@ -6,121 +6,25 @@
 
 # Test info
 
-- Name: scenarios.spec.ts >> K003: Sarah sees task marked complete by Maria
-- Location: tests/scenarios.spec.ts:203:1
+- Name: scenarios.spec.ts >> K004: [BUG] Sarah cannot see notes on tasks she views
+- Location: tests/scenarios.spec.ts:215:1
 
 # Error details
 
 ```
-Error: expect(locator).toBeVisible() failed
-
-Locator: locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")').first()
-Expected: visible
-Timeout: 5000ms
-Error: element(s) not found
-
-Call log:
-  - Expect "toBeVisible" with timeout 5000ms
-  - waiting for locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")').first()
-
+Test timeout of 15000ms exceeded.
 ```
 
-# Page snapshot
+```
+Error: locator.fill: Test timeout of 15000ms exceeded.
+Call log:
+  - waiting for locator('input[placeholder*="Ask a question"]')
 
-```yaml
-- generic [ref=e3]:
-  - generic [ref=e4]:
-    - heading "Good morning, Sarah" [level=1] [ref=e5]
-    - paragraph [ref=e6]: Chen Family
-    - generic [ref=e7]: Commander
-  - generic [ref=e8]:
-    - generic [ref=e10]:
-      - button "‹" [ref=e11] [cursor=pointer]
-      - button "Sun 26" [ref=e12] [cursor=pointer]:
-        - generic [ref=e13]: Sun
-        - generic [ref=e14]: "26"
-      - button "Mon 27" [ref=e15] [cursor=pointer]:
-        - generic [ref=e16]: Mon
-        - generic [ref=e17]: "27"
-      - button "Tue 28" [ref=e18] [cursor=pointer]:
-        - generic [ref=e19]: Tue
-        - generic [ref=e20]: "28"
-      - button "Wed 29" [ref=e21] [cursor=pointer]:
-        - generic [ref=e22]: Wed
-        - generic [ref=e23]: "29"
-      - button "Thu 30" [ref=e24] [cursor=pointer]:
-        - generic [ref=e25]: Thu
-        - generic [ref=e26]: "30"
-      - button "Fri 1" [ref=e27] [cursor=pointer]:
-        - generic [ref=e28]: Fri
-        - generic [ref=e29]: "1"
-      - button "Sat 2" [ref=e30] [cursor=pointer]:
-        - generic [ref=e31]: Sat
-        - generic [ref=e32]: "2"
-      - button "›" [ref=e33] [cursor=pointer]
-    - generic [ref=e35]: 📍 GPS tracking — coming soon
-    - generic [ref=e37]:
-      - generic [ref=e38]:
-        - generic [ref=e39]: 2/4
-        - generic [ref=e40]: Done today
-      - generic [ref=e41]:
-        - generic [ref=e42]: "2"
-        - generic [ref=e43]: In progress
-      - generic [ref=e44]:
-        - generic [ref=e45]: "1"
-        - generic [ref=e46]: Needs help
-    - generic [ref=e47]:
-      - generic [ref=e48]: Today's Tasks
-      - generic [ref=e49]:
-        - generic [ref=e50] [cursor=pointer]:
-          - generic [ref=e51]:
-            - generic [ref=e53]: Take Lily to piano lesson
-            - generic [ref=e54]: ⚠️ Help
-          - generic [ref=e55]:
-            - generic [ref=e56]: ⏰ 16:00
-            - generic [ref=e57]: 👤 Maria Santos
-          - generic [ref=e58]: 📍 Mrs. Lam Piano Studio, 3/F, 42 Java Rd
-          - generic [ref=e60]:
-            - generic [ref=e61]: "Maria Santos:"
-            - text: Traffic looks bad — may be 10 min late. Is that OK?
-        - generic [ref=e62] [cursor=pointer]:
-          - generic [ref=e63]:
-            - generic [ref=e65]: Pick up Tim from basketball
-            - generic [ref=e66]: ○ Pending
-          - generic [ref=e67]:
-            - generic [ref=e68]: ⏰ 17:00
-            - generic [ref=e69]: 👤 Maria Santos
-          - generic [ref=e70]: 📍 Kowloon Cricket Club, Gate B
-        - generic [ref=e71] [cursor=pointer]:
-          - generic [ref=e72]:
-            - generic [ref=e74]: Buy groceries for dinner
-            - generic [ref=e75]: ✓ Done
-          - generic [ref=e76]:
-            - generic [ref=e77]: ⏰ 09:00
-            - generic [ref=e78]: 👤 Maria Santos
-          - generic [ref=e79]: 📍 Kowloon Wet Market
-        - generic [ref=e80] [cursor=pointer]:
-          - generic [ref=e81]:
-            - generic [ref=e83]: Wake kids for school
-            - generic [ref=e84]: ✓ Done
-          - generic [ref=e85]:
-            - generic [ref=e86]: ⏰ 07:00
-            - generic [ref=e87]: 👤 Maria Santos
-          - generic [ref=e88]: 📍 Home
-  - button "+" [ref=e89] [cursor=pointer]
 ```
 
 # Test source
 
 ```ts
-  112 | });
-  113 | 
-  114 | test('V007: Single-day view — no week/date navigation exists', async ({ page }) => {
-  115 |   await go(page, '/helper');
-  116 |   const navButtons = page.locator('button:has-text("Yesterday"), button:has-text("Tomorrow"), button:has-text("Week"), button:has-text("Next day"), button:has-text("Prev")');
-  117 |   const navCount = await navButtons.count();
-  118 |   expect(navCount).toBe(0);
-  119 | });
   120 | 
   121 | // ─── CATEGORY: Notes ─────────────────────────────────────────
   122 | test('N001: Maria adds a note to piano lesson task', async ({ page }) => {
@@ -213,8 +117,7 @@ Call log:
   209 |   await go(page, '/commander');
   210 |   // Basketball should show completed badge
   211 |   const completedBadge = page.locator('.task-card:has-text("basketball") .badge-completed, .task-card:has-text("basketball") .status-badge:has-text("✓ Done")');
-> 212 |   await expect(completedBadge.first()).toBeVisible();
-      |                                        ^ Error: expect(locator).toBeVisible() failed
+  212 |   await expect(completedBadge.first()).toBeVisible();
   213 | });
   214 | 
   215 | test('K004: [BUG] Sarah cannot see notes on tasks she views', async ({ page }) => {
@@ -222,7 +125,8 @@ Call log:
   217 |   await go(page, '/helper');
   218 |   await page.locator('.task-card:has-text("Piano")').click();
   219 |   await page.waitForLoadState('networkidle');
-  220 |   await page.locator('input[placeholder*="Ask a question"]').fill('K004_sarah_read_test');
+> 220 |   await page.locator('input[placeholder*="Ask a question"]').fill('K004_sarah_read_test');
+      |                                                              ^ Error: locator.fill: Test timeout of 15000ms exceeded.
   221 |   await page.click('.note-send-btn');
   222 |   await page.waitForTimeout(200);
   223 |   await page.click('.complete-btn');
@@ -315,4 +219,12 @@ Call log:
   310 |   await expect(gpsBtn).toHaveCount(0);
   311 | });
   312 | 
+  313 | test('G003: Maria sees location on her task list', async ({ page }) => {
+  314 |   await go(page, '/helper');
+  315 |   const location = page.locator('.task-location');
+  316 |   const count = await location.count();
+  317 |   expect(count).toBeGreaterThanOrEqual(1);
+  318 | });
+  319 | 
+  320 | test('G004: [GAP] No map/tap-to-open in Maps from TaskDetail', async ({ page }) => {
 ```

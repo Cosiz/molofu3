@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: scenarios.spec.ts >> N002: Sarah reads a note left by Maria on piano task
-- Location: tests/scenarios.spec.ts:134:1
+- Name: scenarios.spec.ts >> N001: Maria adds a note to piano lesson task
+- Location: tests/scenarios.spec.ts:122:1
 
 # Error details
 
@@ -25,6 +25,19 @@ Call log:
 # Test source
 
 ```ts
+  28  |   await expect(page.locator('.task-title').first()).toContainText('CT1_create_task');
+  29  | });
+  30  | 
+  31  | test('C002: Task creation with description and location', async ({ page }) => {
+  32  |   await go(page, '/commander');
+  33  |   await page.click('.fab');
+  34  |   const unique = 'CT2_desc_loc_' + Date.now();
+  35  |   await page.fill('input[placeholder*="Pick up Tim"]', unique);
+  36  |   await page.fill('textarea[placeholder*="Gate B"]', 'Test description');
+  37  |   await page.fill('input[placeholder*="Kowloon Cricket"]', 'Test Location XYZ');
+  38  |   await page.click('button[type="submit"]');
+  39  |   await page.waitForTimeout(300);
+  40  |   // Task visible in list
   41  |   await expect(page.getByText(unique)).toBeVisible();
   42  | });
   43  | 
@@ -112,7 +125,8 @@ Call log:
   125 |   await page.locator('.task-card:has-text("Piano")').click();
   126 |   await page.waitForLoadState('networkidle');
   127 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
-  128 |   await noteInput.fill('N001_note_test_' + Date.now());
+> 128 |   await noteInput.fill('N001_note_test_' + Date.now());
+      |                   ^ Error: locator.fill: Test timeout of 15000ms exceeded.
   129 |   await page.click('.note-send-btn');
   130 |   await page.waitForTimeout(300);
   131 |   await expect(page.locator('.task-note').first()).toBeVisible();
@@ -125,8 +139,7 @@ Call log:
   138 |   await page.waitForLoadState('networkidle');
   139 |   const noteInput = page.locator('input[placeholder*="Ask a question"]');
   140 |   const noteText = 'N002_read_note_' + Date.now();
-> 141 |   await noteInput.fill(noteText);
-      |                   ^ Error: locator.fill: Test timeout of 15000ms exceeded.
+  141 |   await noteInput.fill(noteText);
   142 |   await page.click('.note-send-btn');
   143 |   await page.waitForTimeout(300);
   144 |   // Navigate to Sarah
@@ -214,17 +227,4 @@ Call log:
   226 |   await go(page, '/commander');
   227 |   await page.locator('.task-card:has-text("Piano")').click();
   228 |   await page.waitForLoadState('networkidle');
-  229 |   // BUG: Sarah can see existing notes in the thread (from mock data) but the note she left as K002 won't be visible
-  230 |   // The task is now completed so she sees it... but the key bug is N003
-  231 |   await expect(page.locator('.task-note').first()).toBeVisible();
-  232 | });
-  233 | 
-  234 | test('K005: Task detail → mark complete → navigates back', async ({ page }) => {
-  235 |   await go(page, '/helper');
-  236 |   await page.locator('.task-card').first().click();
-  237 |   await page.waitForLoadState('networkidle');
-  238 |   await page.click('.complete-btn');
-  239 |   await page.waitForTimeout(500);
-  240 |   await expect(page).not.toHaveURL(/\/task\//);
-  241 | });
 ```
