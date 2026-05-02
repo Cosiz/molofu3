@@ -1,150 +1,155 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { TaskCard } from '../components/TaskCard';
-import { EscalationBanner } from '../components/EscalationBanner';
-import { CreateTaskForm } from '../components/CreateTaskForm';
-import { colors, typography, spacing, borderRadius, shadow } from '../theme';
-import { isToday } from '../utils/time';
 
 export function CommanderDashboard() {
-  const { currentUser, tasks, escalations } = useStore();
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const { setUser, todaysTasks, addTask } = useStore();
+  const navigate = useNavigate();
+  const [showCreate, setShowCreate] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [assignee, setAssignee] = useState('u2');
+  const [dueTime, setDueTime] = useState('17:00');
+  const [location, setLocation] = useState('');
 
-  const todayTasks = tasks.filter(t => isToday(t.due_date));
-  const activeEscalations = escalations.filter(e => !e.resolved);
-  const inProgressCount = todayTasks.filter(t => t.status === 'in_progress' || t.status === 'accepted').length;
-  const doneCount = todayTasks.filter(t => t.status === 'done').length;
+  useEffect(() => { setUser({ id: 'u1', name: 'Sarah Chen', role: 'commander' }); }, []);
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
+  const tasks = todaysTasks();
+  const completed = tasks.filter((t) => t.status === 'completed').length;
+  const needsHelp = tasks.filter((t) => t.status === 'needs_help').length;
+  const pending = tasks.filter((t) => t.status !== 'completed').length;
+
+  const sorted = [...tasks].sort((a, b) => {
+    const o: Record<string, number> = { needs_help: 0, in_progress: 1, pending: 2, completed: 3 };
+    return o[a.status] - o[b.status];
+  });
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!title.trim()) return;
+    addTask({
+      title: title.trim(),
+      description: description.trim(),
+      assigneeId: assignee,
+      assigneeName: assignee === 'u2' ? 'Maria Santos' : 'David Chen',
+      dueTime,
+      dueDate: new Date().toISOString().split('T')[0],
+      location,
+      contact: '',
+      status: 'pending',
+      createdBy: 'u1',
+    });
+    setTitle(''); setDescription(''); setDueTime('17:00'); setLocation('');
+    setShowCreate(false);
+  }
 
   return (
-    <div style={{ padding: spacing.md, paddingBottom: 80 }}>
-      {/* Header */}
-      <div style={{ marginBottom: spacing.md }}>
-        <h1 style={{ ...typography.heading }}>{greeting()}, {currentUser?.name?.split(' ')[0]}</h1>
-        <p style={{ ...typography.small, color: colors.textSecondary }}>
-          {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
+    <div className="dashboard">
+      <div className="dash-header">
+        <h1>Good morning, Sarah</h1>
+        <p>Chen Family</p>
+        <div className="badge">Commander</div>
       </div>
-
-      {/* Escalation Banner */}
-      <EscalationBanner escalations={escalations} tasks={tasks} />
-
-      {/* Stats Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: spacing.sm, marginBottom: spacing.md }}>
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.md,
-          textAlign: 'center',
-          boxShadow: shadow.card,
-        }}>
-          <div style={{ ...typography.heading, color: colors.primary }}>{todayTasks.length}</div>
-          <div style={{ ...typography.small, color: colors.textSecondary }}>Tasks Today</div>
-        </div>
-        <div style={{
-          background: activeEscalations.length > 0 ? colors.alert + '20' : colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.md,
-          textAlign: 'center',
-          boxShadow: shadow.card,
-        }}>
-          <div style={{ ...typography.heading, color: activeEscalations.length > 0 ? colors.alert : colors.primary }}>
-            {activeEscalations.length}
+      <div className="dash-body">
+        <div className="dash-card">
+          <div className="stat-row">
+            <div className="stat-card">
+              <div className="stat-num">{completed}/{tasks.length}</div>
+              <div className="stat-label">Done today</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-num">{pending}</div>
+              <div className="stat-label">In progress</div>
+            </div>
+            <div className="stat-card">
+              <div className="stat-num" style={{ color: needsHelp > 0 ? 'var(--primary)' : 'inherit' }}>{needsHelp}</div>
+              <div className="stat-label">Needs help</div>
+            </div>
           </div>
-          <div style={{ ...typography.small, color: colors.textSecondary }}>Alerts</div>
         </div>
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.md,
-          textAlign: 'center',
-          boxShadow: shadow.card,
-        }}>
-          <div style={{ ...typography.heading, color: colors.secondary }}>{doneCount}/{todayTasks.length}</div>
-          <div style={{ ...typography.small, color: colors.textSecondary }}>Completed</div>
-        </div>
-      </div>
 
-      {/* Today's Tasks */}
-      <div style={{ marginBottom: spacing.sm }}>
-        <h2 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Today's Tasks</h2>
-        {todayTasks.length === 0 ? (
-          <div style={{
-            background: colors.card,
-            borderRadius: borderRadius.md,
-            padding: spacing.lg,
-            textAlign: 'center',
-            color: colors.textSecondary,
-            ...typography.body,
-          }}>
-            No tasks for today. Tap + to create one.
-          </div>
-        ) : (
-          todayTasks.map(task => (
-            <TaskCard key={task.id} task={task} />
-          ))
-        )}
-      </div>
-
-      {/* GPS Preview Card */}
-      <div style={{
-        background: colors.card,
-        borderRadius: borderRadius.md,
-        padding: spacing.md,
-        marginTop: spacing.md,
-        boxShadow: shadow.card,
-      }}>
-        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>📍 Helper Status</h3>
-        <div style={{
-          background: colors.background,
-          borderRadius: borderRadius.sm,
-          padding: spacing.md,
-          minHeight: 120,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: colors.textSecondary,
-          ...typography.small,
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 32, marginBottom: spacing.sm }}>🗺️</div>
-            <div>Maria is currently {inProgressCount > 0 ? 'on a task' : 'available'}</div>
-            {inProgressCount > 0 && <div style={{ color: colors.primary, marginTop: 4 }}>● Live tracking active</div>}
+        <div className="dash-card">
+          <div className="section-title">Today's Tasks</div>
+          <div className="scroll-list">
+            {sorted.length === 0 ? (
+              <div className="empty">
+                <span className="empty-icon">📋</span>
+                <h3>No tasks yet</h3>
+                <p>Tap + to assign your first task</p>
+              </div>
+            ) : sorted.map((task) => (
+              <div
+                key={task.id}
+                className={`task-card ${task.status === 'completed' ? 'task-done' : ''}`}
+                onClick={() => navigate(`/task/${task.id}`)}
+              >
+                <div className="task-top">
+                  <div className={`task-status-dot dot-${task.status}`} />
+                  <div className="task-title">{task.title}</div>
+                  <span className={`status-badge badge-${task.status}`}>
+                    {task.status === 'needs_help' ? '⚠️ Help' : task.status === 'completed' ? '✓ Done' : task.status === 'in_progress' ? '→ Active' : '○ Pending'}
+                  </span>
+                </div>
+                <div className="task-meta">
+                  <span className="task-meta-item">⏰ {task.dueTime}</span>
+                  <span className="task-meta-item">👤 {task.assigneeName}</span>
+                </div>
+                {task.location && <div className="task-location">📍 {task.location}</div>}
+                {task.notes.length > 0 && (
+                  <div className="task-notes">
+                    {task.notes.map((n) => (
+                      <div key={n.id} className="task-note">
+                        <span className="task-note-author">{n.authorName}:</span> {n.content}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Floating + Button */}
-      <button
-        onClick={() => setShowCreateForm(true)}
-        style={{
-          position: 'fixed',
-          bottom: 80,
-          right: spacing.lg,
-          width: 56,
-          height: 56,
-          borderRadius: '50%',
-          background: colors.primary,
-          color: colors.card,
-          border: 'none',
-          fontSize: 28,
-          boxShadow: shadow.elevated,
-          cursor: 'pointer',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 50,
-        }}
-      >+</button>
+      <button className="fab" onClick={() => setShowCreate(true)}>+</button>
 
-      {/* Create Task Modal */}
-      {showCreateForm && <CreateTaskForm onClose={() => setShowCreateForm(false)} />}
+      {showCreate && (
+        <div className="modal-overlay" onClick={() => setShowCreate(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <h2>New Task</h2>
+            <form onSubmit={submit}>
+              <div className="form-group">
+                <label>What needs to be done?</label>
+                <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Pick up Tim from basketball" autoFocus required />
+              </div>
+              <div className="form-group">
+                <label>Details (optional)</label>
+                <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Gate B, blue cubby has his bag..." rows={2} />
+              </div>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Assign to</label>
+                  <select value={assignee} onChange={(e) => setAssignee(e.target.value)}>
+                    <option value="u2">Maria Santos</option>
+                    <option value="u3">David Chen</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Due time</label>
+                  <input type="time" value={dueTime} onChange={(e) => setDueTime(e.target.value)} />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Location (optional)</label>
+                <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Kowloon Cricket Club, Gate B" />
+              </div>
+              <button type="submit" className="btn-primary">
+                Send to {assignee === 'u2' ? 'Maria' : 'David'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

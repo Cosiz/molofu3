@@ -1,0 +1,33 @@
+{
+  "product": "molofu3",
+  "schema_version": "6.2",
+  "phase": "1",
+  "started": "2026-05-02T07:30:00Z",
+  "last_updated": "2026-05-02T07:30:00Z",
+  "version": "0.1.0",
+  "status": "active",
+  "current_agent": "product-manager",
+  "delegate_task_id": null,
+  "phase_history": [],
+  "escalation_log": [],
+  "pain_points": [
+    "3+ hours/day wasted coordinating across WhatsApp, calendar, classroom, and mental load",
+    "Delayed coordination — helper messages picked up late while commander is in meeting",
+    "Fragmented tools — 5+ tools that don't talk to each other",
+    "Mental exhaustion — commander carries entire cognitive load",
+    "No accountability — no structured task assignment, no real-time location, no escalation when helper goes dark",
+    "Cost of failure — missed tuition classes, kids in transit, forgotten homework"
+  ],
+  "target_customer": "Hong Kong working families",
+  "blockers": [],
+  "releases": [],
+  "user_test": {
+    "prototype_deployed": false,
+    "user_tested": false,
+    "pain_confirmed": false,
+    "retries": 0,
+    "report_path": null
+  },
+  "deployed_url": null,
+  "github_repo": "https://github.com/Cosiz/molofu3"
+}

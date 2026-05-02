@@ -1,120 +1,82 @@
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store';
-import { TaskCard } from '../components/TaskCard';
-import { colors, typography, spacing, borderRadius, shadow, touchTarget } from '../theme';
 
 export function HelperDashboard() {
-  const { currentUser, tasks, updateTask } = useStore();
+  const { setUser, myTasks, completeTask } = useStore();
+  const navigate = useNavigate();
 
-  const myTasks = tasks.filter(t => t.assigned_to === currentUser?.id);
-  const activeTasks = myTasks.filter(t => t.status !== 'done');
-  const nextTask = activeTasks[0];
+  useEffect(() => { setUser({ id: 'u2', name: 'Maria Santos', role: 'helper' }); }, []);
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
-  };
-
-  const handleAction = (taskId: string, action: string) => {
-    const statusMap: Record<string, string> = {
-      accept: 'accepted',
-      start: 'in_progress',
-      done: 'done',
-    };
-    const newStatus = statusMap[action];
-    if (newStatus) {
-      updateTask(taskId, {
-        status: newStatus as any,
-        ...(newStatus === 'done' ? { completed_at: new Date().toISOString() } : {}),
-      });
-    }
-  };
+  const tasks = myTasks().filter((t) => t.status !== 'completed');
+  const sorted = [...tasks].sort((a, b) => {
+    const o: Record<string, number> = { needs_help: 0, in_progress: 1, pending: 2 };
+    return o[a.status] - o[b.status];
+  });
 
   return (
-    <div style={{ padding: spacing.md, paddingBottom: 80 }}>
-      {/* Header */}
-      <div style={{ marginBottom: spacing.md }}>
-        <h1 style={{ ...typography.heading }}>{greeting()}, {currentUser?.name?.split(' ')[0]}</h1>
-        <p style={{ ...typography.small, color: colors.textSecondary }}>
-          {activeTasks.length} task{activeTasks.length !== 1 ? 's' : ''} remaining today
-        </p>
+    <div className="dashboard">
+      <div className="dash-header helper">
+        <h1>Good morning, Maria</h1>
+        <p>Chen Family</p>
+        <div className="badge">Helper</div>
       </div>
-
-      {/* Next Task - Big Card */}
-      {nextTask ? (
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.lg,
-          marginBottom: spacing.md,
-          boxShadow: shadow.elevated,
-          borderLeft: `4px solid ${colors.primary}`,
-        }}>
-          <div style={{ ...typography.small, color: colors.textSecondary, marginBottom: spacing.xs }}>Next Task</div>
-          <div style={{ ...typography.heading, marginBottom: spacing.sm }}>{nextTask.title}</div>
-          <div style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.md }}>
-            Due: {new Date(nextTask.due_date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false })}
+      <div className="dash-body">
+        <div className="dash-card">
+          <div className="section-title">Your Tasks — {tasks.length} remaining</div>
+          <div className="scroll-list">
+            {sorted.length === 0 ? (
+              <div className="empty">
+                <span className="empty-icon">☕</span>
+                <h3>All done!</h3>
+                <p>Enjoy your day, Maria</p>
+              </div>
+            ) : sorted.map((task) => (
+              <div key={task.id} className="task-card" onClick={() => navigate(`/task/${task.id}`)}>
+                <div className="task-top">
+                  <div className={`task-status-dot dot-${task.status}`} />
+                  <div className="task-title">{task.title}</div>
+                  <span className={`status-badge badge-${task.status}`}>
+                    {task.status === 'needs_help' ? '⚠️ Help' : task.status === 'in_progress' ? '→ Active' : '○ Pending'}
+                  </span>
+                </div>
+                <div className="task-meta">
+                  <span className="task-meta-item">⏰ {task.dueTime}</span>
+                </div>
+                {task.location && <div className="task-location">📍 {task.location}</div>}
+                {task.notes.length > 0 && (
+                  <div className="task-notes">
+                    {task.notes.map((n) => (
+                      <div key={n.id} className="task-note">
+                        <span className="task-note-author">{n.authorName}:</span> {n.content}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
-          {nextTask.location && (
-            <div style={{ ...typography.small, color: colors.primary, marginBottom: spacing.md }}>📍 {nextTask.location}</div>
-          )}
-          <button
-            onClick={() => handleAction(nextTask.id, nextTask.status === 'pending' ? 'accept' : nextTask.status === 'accepted' ? 'start' : 'done')}
-            style={{
-              width: '100%',
-              padding: spacing.md,
-              borderRadius: borderRadius.sm,
-              background: nextTask.status === 'done' ? colors.secondary : colors.primary,
-              color: colors.card,
-              border: 'none',
-              ...typography.button,
-              minHeight: touchTarget.large,
-              fontSize: 20,
-              cursor: 'pointer',
-            }}
-          >
-            {nextTask.status === 'pending' ? '✅ Accept' : nextTask.status === 'accepted' ? '🚗 Start' : '✅ Done'}
-          </button>
         </div>
-      ) : (
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.xl,
-          marginBottom: spacing.md,
-          textAlign: 'center',
-          boxShadow: shadow.card,
-        }}>
-          <div style={{ fontSize: 48, marginBottom: spacing.md }}>🎉</div>
-          <div style={{ ...typography.subheading }}>All tasks done!</div>
-          <div style={{ ...typography.small, color: colors.textSecondary }}>Well done. You can rest now.</div>
-        </div>
-      )}
 
-      {/* All My Tasks */}
-      <h2 style={{ ...typography.subheading, marginBottom: spacing.sm }}>My Tasks</h2>
-      {myTasks.length === 0 ? (
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.lg,
-          textAlign: 'center',
-          color: colors.textSecondary,
-          ...typography.body,
-        }}>
-          No tasks assigned yet.
-        </div>
-      ) : (
-        myTasks.map(task => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            showActions={true}
-            onAction={(action) => handleAction(task.id, action)}
-          />
-        ))
-      )}
+        {tasks.length > 0 && (
+          <div className="dash-card">
+            <div className="section-title">Quick Complete</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {tasks.map((task) => (
+                <button
+                  key={task.id}
+                  className="quick-action-btn"
+                  onClick={(e) => { e.stopPropagation(); completeTask(task.id); }}
+                >
+                  <span>✓</span>
+                  <span style={{ flex: 1, textAlign: 'left', fontSize: 14 }}>{task.title}</span>
+                  <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{task.dueTime}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

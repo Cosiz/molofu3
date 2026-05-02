@@ -1,126 +1,78 @@
+import { useEffect } from 'react';
 import { useStore } from '../store';
-import { colors, typography, spacing, borderRadius, shadow } from '../theme';
-import { timeAgo, isToday } from '../utils/time';
 
 export function ObserverDashboard() {
-  const { currentUser, tasks } = useStore();
+  const { setUser, todaysTasks } = useStore();
+  useEffect(() => { setUser({ id: 'u3', name: 'David Chen', role: 'observer' }); }, []);
 
-  const todayTasks = tasks.filter(t => isToday(t.due_date));
-  const completedTasks = tasks.filter(t => t.status === 'done').sort((a, b) =>
-    new Date(b.completed_at || '').getTime() - new Date(a.completed_at || '').getTime()
-  );
-  const helperTasks = tasks.filter(t => t.assigned_to !== currentUser?.id);
+  const tasks = todaysTasks();
+  const completed = tasks.filter((t) => t.status === 'completed').length;
+  const needsHelp = tasks.filter((t) => t.status === 'needs_help').length;
+  const inProgress = tasks.filter((t) => t.status === 'in_progress' || t.status === 'pending').length;
 
   return (
-    <div style={{ padding: spacing.md, paddingBottom: 80 }}>
-      {/* Header */}
-      <div style={{ marginBottom: spacing.md }}>
-        <h1 style={{ ...typography.heading }}>Family Status</h1>
-        <p style={{ ...typography.small, color: colors.textSecondary }}>
-          {new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}
-        </p>
+    <div className="dashboard">
+      <div className="dash-header observer">
+        <h1>Hi David</h1>
+        <p>Chen Family — You're traveling ✈️</p>
+        <div className="badge">Observer</div>
       </div>
-
-      {/* Summary Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: spacing.sm, marginBottom: spacing.md }}>
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.md,
-          textAlign: 'center',
-          boxShadow: shadow.card,
-        }}>
-          <div style={{ ...typography.heading, color: colors.primary }}>{todayTasks.length}</div>
-          <div style={{ ...typography.small, color: colors.textSecondary }}>Today's Tasks</div>
-        </div>
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.md,
-          textAlign: 'center',
-          boxShadow: shadow.card,
-        }}>
-          <div style={{ ...typography.heading, color: colors.secondary }}>{completedTasks.length}</div>
-          <div style={{ ...typography.small, color: colors.textSecondary }}>Completed</div>
-        </div>
-      </div>
-
-      {/* Helper Status */}
-      <div style={{
-        background: colors.card,
-        borderRadius: borderRadius.md,
-        padding: spacing.md,
-        marginBottom: spacing.md,
-        boxShadow: shadow.card,
-      }}>
-        <h3 style={{ ...typography.subheading, marginBottom: spacing.sm }}>📍 Helper Status</h3>
-        {helperTasks.length === 0 ? (
-          <div style={{ ...typography.small, color: colors.textSecondary }}>No active tasks for helper</div>
-        ) : (
-          helperTasks.slice(0, 3).map(task => (
-            <div key={task.id} style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              padding: `${spacing.sm} 0`,
-              borderBottom: `1px solid ${colors.border}`,
-              ...typography.small,
-            }}>
-              <span>{task.title}</span>
-              <span style={{ color: task.status === 'done' ? colors.secondary : colors.primary }}>
-                {task.status.replace('_', ' ')}
-              </span>
+      <div className="dash-body">
+        <div className="dash-card">
+          <div className="stat-row">
+            <div className="stat-card">
+              <div className="stat-num" style={{ color: '#16A34A' }}>{completed}</div>
+              <div className="stat-label">Tasks done</div>
             </div>
-          ))
-        )}
-      </div>
-
-      {/* Activity Timeline */}
-      <h2 style={{ ...typography.subheading, marginBottom: spacing.sm }}>Recent Activity</h2>
-      {completedTasks.length === 0 ? (
-        <div style={{
-          background: colors.card,
-          borderRadius: borderRadius.md,
-          padding: spacing.lg,
-          textAlign: 'center',
-          color: colors.textSecondary,
-          ...typography.body,
-        }}>
-          No completed tasks yet today.
-        </div>
-      ) : (
-        completedTasks.slice(0, 5).map(task => (
-          <div key={task.id} style={{
-            background: colors.card,
-            borderRadius: borderRadius.md,
-            padding: spacing.md,
-            marginBottom: spacing.sm,
-            boxShadow: shadow.card,
-            display: 'flex',
-            gap: spacing.md,
-            alignItems: 'flex-start',
-          }}>
-            <div style={{
-              width: 8,
-              height: 8,
-              borderRadius: '50%',
-              background: colors.secondary,
-              marginTop: 6,
-              flexShrink: 0,
-            }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ ...typography.body }}>{task.title}</div>
-              <div style={{ ...typography.small, color: colors.textSecondary }}>
-                Completed {task.completed_at ? timeAgo(task.completed_at) : 'recently'}
-              </div>
+            <div className="stat-card">
+              <div className="stat-num">{inProgress}</div>
+              <div className="stat-label">In progress</div>
             </div>
-            <span style={{
-              ...typography.small,
-              color: colors.secondary,
-              fontWeight: 600,
-            }}>✅ Done</span>
+            <div className="stat-card">
+              <div className="stat-num" style={{ color: needsHelp > 0 ? 'var(--primary)' : 'inherit' }}>{needsHelp}</div>
+              <div className="stat-label">Needs help</div>
+            </div>
           </div>
-        ))
-      )}
+        </div>
+
+        <div className="dash-card">
+          {needsHelp > 0 ? (
+            <div className="alert-banner">
+              <div className="alert-title">⚠️ {needsHelp} task{needsHelp > 1 ? 's' : ''} need your help</div>
+              <div className="alert-sub">Sarah may need support — consider reaching out</div>
+            </div>
+          ) : (
+            <div className="alert-banner ok">
+              <div className="alert-title">✓ Family is on track</div>
+              <div className="alert-sub">Everything is running smoothly today</div>
+            </div>
+          )}
+        </div>
+
+        <div className="dash-card">
+          <div className="section-title">Task Summary</div>
+          {tasks.map((task) => (
+            <div key={task.id} className={`observer-task-row ${task.status === 'completed' ? 'done' : ''}`}>
+              <span>
+                {task.status === 'completed' ? '✓' : task.status === 'needs_help' ? '⚠️' : task.status === 'in_progress' ? '→' : '○'}
+              </span>
+              <span style={{ flex: 1 }}>{task.title}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{task.assigneeName.split(' ')[0]}</span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{task.dueTime}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="dash-card">
+          <div className="section-title">Message Sarah</div>
+          <div className="msg-box">
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input className="msg-input" placeholder="e.g. I can pick up Tim tomorrow..." />
+              <button className="msg-send">Send</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
